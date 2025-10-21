@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>StudyMate — Deadlines</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-page="deadlines">
+    <nav class="navbar">
+        <div class="brand">StudyMate</div>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="deadlines.html" class="active">Deadlines</a>
+            <a href="subjects.html">Subjects</a>
+            <a href="profile.html">Profile</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Deadlines</h1>
+        <p>See upcoming deadlines, sorted by date</p>
+    </section>
+
+    <div class="container">
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title">Upcoming Deadlines</div>
+            </div>
+
+            <div id="deadlines-list">
+                <div class="empty">Loading deadlines...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderDeadlines();
+        });
+    </script>
+</body>
+
+</html>

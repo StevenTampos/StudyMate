@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>StudyMate — Subjects</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-page="subjects">
+    <nav class="navbar">
+        <div class="brand">StudyMate</div>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="deadlines.html">Deadlines</a>
+            <a href="subjects.html" class="active">Subjects</a>
+            <a href="profile.html">Profile</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Subjects</h1>
+        <p>Progress view per subject</p>
+    </section>
+
+    <div class="container">
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title">Subject Progress</div>
+            </div>
+
+            <div id="subjects-list"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderSubjects();
+        });
+    </script>
+</body>
+
+</html>
