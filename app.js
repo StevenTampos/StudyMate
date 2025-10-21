@@ -348,3 +348,19 @@ document.addEventListener("click", (e) => {
         showModal(null);
     }
 });
+
+// app.js (snippet)
+const addBtn = document.querySelector('.open-add');
+const modalBackdrop = document.querySelector('.modal-backdrop');
+
+addBtn.addEventListener('click', () => {
+    modalBackdrop.style.display = 'flex';
+    modalBackdrop.classList.add('show');
+});
+
+modalBackdrop.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-backdrop')) {
+        modalBackdrop.classList.remove('show');
+        setTimeout(() => (modalBackdrop.style.display = 'none'), 300);
+    }
+});
