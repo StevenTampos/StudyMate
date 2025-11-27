@@ -1,14 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="height: 100%;">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>StudyMate — Profile</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: var(--bg) !important;
+        }
+        
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background: var(--bg) !important;
+            transition: background-color 0.3s ease;
+        }
+        
         .profile-container {
             max-width: 600px;
-            margin: 0 auto;
+            margin: 40px auto 0;
+            padding: 20px 0 40px;
+            background: transparent !important;
+            transition: background-color 0.3s ease;
+        }
+        
+        .card {
+            background: var(--card-bg, white);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--card-shadow, 0 2px 8px rgba(0, 0, 0, 0.1));
         }
         
         .profile-header {
@@ -102,10 +127,78 @@
         }
         
         .profile-field .value {
-            padding: 12px;
-            background: #f8fafc;
+            padding: 0;
+            background: var(--input-bg, #f8fafc);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color, #e2e8f0);
+            color: var(--text-color, #333333);
+        }
+        
+        .editable-field {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-color, #333333);
+            font-family: inherit;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+        
+        .editable-field:disabled {
+            background: transparent;
+            cursor: default;
+        }
+        
+        .editable-field:not(:disabled) {
+            background: var(--input-bg, #fff);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-prefix {
+            padding: 0 0 0 12px;
+            color: var(--text-color);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .primary-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .primary-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .secondary-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .secondary-btn:hover {
+            background: var(--input-bg);
         }
         
         .edit-btn {
@@ -117,6 +210,7 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.25s ease;
+            margin-left: auto;
         }
         
         .edit-btn:hover {
@@ -178,6 +272,63 @@
             background: linear-gradient(135deg, #1f2937 0%, #111827 100%); 
             color: white; 
         }
+        
+        /* Theme Toggle Switch */
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
     </style>
 </head>
 <body data-page="profile">
@@ -194,7 +345,7 @@
         <h1>Profile</h1>
         <p>Your account information</p>
     </section>
-    <div class="container profile-container">
+    <div class="container profile-container" style="min-height: calc(100vh - 100px); background: transparent !important;">
         <div class="card">
             <div class="profile-header">
                 <div class="profile-picture-wrapper">
@@ -214,51 +365,145 @@
             
             <div class="section-header">
                 <div class="section-title">User Information</div>
-                <button class="edit-btn" onclick="editProfile()">Edit</button>
+                <button class="edit-btn" onclick="toggleEditMode(true)">Edit</button>
             </div>
             
             <div class="profile-field">
-                <label>Name</label>
-                <div class="value" id="user-name">Student</div>
+                <label for="name-input">Name</label>
+                <div class="value">
+                    <input type="text" id="name-input" class="editable-field" value="Student" disabled>
+                </div>
             </div>
             
             <div class="profile-field">
-                <label>Username</label>
-                <div class="value" id="user-username">@student</div>
+                <label for="username-input">Username</label>
+                <div class="value">
+                    <div class="input-group">
+                        <span class="input-prefix">@</span>
+                        <input type="text" id="username-input" class="editable-field" value="student" disabled>
+                    </div>
+                </div>
             </div>
             
             <div class="profile-field">
-                <label>Email</label>
-                <div class="value" id="user-email">student@studymate.com</div>
+                <label for="email-input">Email</label>
+                <div class="value">
+                    <input type="email" id="email-input" class="editable-field" value="student@studymate.com" disabled>
+                </div>
             </div>
             
             <div class="profile-field">
-                <label>Subjects</label>
-                <div class="value" id="user-subjects">No subjects yet</div>
+                <label for="subjects-input">Subjects (comma separated)</label>
+                <div class="value">
+                    <input type="text" id="subjects-input" class="editable-field" value="" placeholder="e.g., Math, Science, History" disabled>
+                </div>
             </div>
             
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <div class="button-group" style="display: none; margin-top: 20px; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="secondary-btn" id="cancel-edit" onclick="toggleEditMode(false)">Cancel</button>
+                <button type="button" class="primary-btn" id="save-changes" onclick="saveProfile()">Save Changes</button>
+            </div>
+            
+            <div class="profile-field" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                <label>Color Theme</label>
+                <div class="theme-toggle-container" style="margin-top: 10px;">
+                    <span id="themeLabel">Light</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle" onchange="changeTheme(this.checked ? 'dark' : 'light')">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>Dark</span>
+                </div>
+            </div>
+            
+            <button class="logout-btn" style="margin-top: 30px;" onclick="logout()">🚪 Logout</button>
         </div>
         
-        <div class="card" style="margin-top: 20px;">
-            <div class="section-title">Theme Customization</div>
-            <p style="color: var(--muted); margin-top: 8px; font-size: 0.9rem;">Choose your dashboard theme</p>
-            
-            <div class="theme-options">
-                <div class="theme-option theme-light active" data-theme="light" onclick="changeTheme('light')">
-                    ☀️ Light Mode
-                </div>
-                <div class="theme-option theme-dark" data-theme="dark" onclick="changeTheme('dark')">
-                    🌙 Dark Mode
-                </div>
-            </div>
-        </div>
     </div>
     
     <script src="app.js"></script>
     <script>
         const PROFILE_KEY = "studymate_profile_v1";
         const THEME_KEY = "studymate_theme_v1";
+        
+        // Load saved profile data or use defaults
+        function loadProfile() {
+            const savedProfile = localStorage.getItem(PROFILE_KEY);
+            if (savedProfile) {
+                const profile = JSON.parse(savedProfile);
+                document.getElementById('name-input').value = profile.name || 'Student';
+                document.getElementById('username-input').value = profile.username || 'student';
+                document.getElementById('email-input').value = profile.email || 'student@studymate.com';
+                document.getElementById('subjects-input').value = profile.subjects || '';
+                document.getElementById('profile-initial').textContent = (profile.name || 'S').charAt(0).toUpperCase();
+            }
+        }
+        
+        // Save profile data
+        function saveProfile() {
+            const profile = {
+                name: document.getElementById('name-input').value,
+                username: document.getElementById('username-input').value,
+                email: document.getElementById('email-input').value,
+                subjects: document.getElementById('subjects-input').value
+            };
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+            document.getElementById('profile-initial').textContent = profile.name.charAt(0).toUpperCase();
+        }
+        
+        // Toggle edit mode
+        function toggleEditMode(enable) {
+            const fields = document.querySelectorAll('.editable-field');
+            const buttonGroup = document.querySelector('.button-group');
+            const editBtn = document.querySelector('.edit-btn');
+            
+            fields.forEach(field => {
+                field.disabled = !enable;
+                if (enable) {
+                    field.focus();
+                    // Select the text in the first field
+                    if (field.id === 'name-input') {
+                        field.select();
+                    }
+                }
+            });
+            
+            buttonGroup.style.display = enable ? 'flex' : 'none';
+            editBtn.style.display = enable ? 'none' : 'block';
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+            
+            // Edit button
+            document.querySelector('.edit-btn').addEventListener('click', function() {
+                toggleEditMode(true);
+            });
+            
+            // Cancel button
+            document.getElementById('cancel-edit').addEventListener('click', function() {
+                loadProfile(); // Reload saved data
+                toggleEditMode(false);
+            });
+            
+            // Save button
+            document.getElementById('save-changes').addEventListener('click', function() {
+                saveProfile();
+                toggleEditMode(false);
+            });
+            
+            // Allow saving with Enter key
+            document.querySelectorAll('.editable-field').forEach(field => {
+                field.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveProfile();
+                        toggleEditMode(false);
+                    }
+                });
+            });
+        });
         
         const themes = {
             light: {
@@ -412,7 +657,7 @@
         
         function logout() {
             if (confirm("Are you sure you want to logout?")) {
-                alert("👋 Logged out successfully!");
+                alert("Logged out successfully!");
                 // In a real app, this would redirect to login page
                 // For now, just refresh to show the logged out state
                 window.location.href = "index.html";
