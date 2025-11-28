@@ -602,3 +602,20 @@ select {
 body {
     transition: background 0.4s ease, color 0.4s ease;
 }
+
+/* Add this to your existing styles */
+.expense-form {
+    margin-bottom: 40px; /* Already set, but keeping it for reference */
+}
+
+/* Add this new rule to create more space after the form */
+#expense-form + .card {
+    margin-top: 30px;
+}
+
+/* Or if the expense history is in a different structure, you can use: */
+.expense-history-section {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -18,12 +18,12 @@
             border-radius: var(--card-radius);
             padding: 20px;
             box-shadow: var(--shadow);
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 25px;
             margin-top: 15px;
         }
         .summary-item {
@@ -46,7 +46,7 @@
         .expense-form {
             display: grid;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
         }
         .form-row {
             display: grid;
@@ -56,16 +56,16 @@
         .form-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 20px;
         }
         .expense-list {
-            margin-top: 20px;
+            margin-top: 40px;
         }
         .expense-item {
             display: flex;
             justify-content: space-between;
             padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
             align-items: center;
         }
         .expense-item:last-child {
@@ -169,21 +169,26 @@
             </form>
         </div>
 
-        <div class="card">
-            <div class="section-header">
-                <h2>Expense History</h2>
-                <div class="controls">
-                    <select id="month-filter" class="select">
-                        <option value="all">All Months</option>
-                        <!-- Will be populated by JavaScript -->
-                    </select>
+        <!-- Add margin between form and history -->
+        <div style="margin-top: 40px;">
+            <div class="card">
+                <div class="section-header">
+                    <h2>Expense History</h2>
+                    <div class="controls">
+                        <select id="month-filter" class="select">
+                            <option value="all">All Months</option>
+                            <!-- Will be populated by JavaScript -->
+                        </select>
+                    </div>
+                </div>
+                <div id="expense-list" class="expense-list">
+                    <!-- Expenses will be added here by JavaScript -->
+                    <p class="empty-state">No expenses recorded yet. Add your first expense above!</p>
                 </div>
             </div>
-            <div id="expense-list" class="expense-list">
-                <!-- Expenses will be added here by JavaScript -->
-                <p class="empty-state">No expenses recorded yet. Add your first expense above!</p>
-            </div>
         </div>
+        <!-- Add margin at the bottom of the container -->
+        <div style="margin-bottom: 40px;"></div>
     </div>
 
     <script>
