@@ -31,7 +31,7 @@ html, body {
     background: var(--bg);
     color: var(--text-color);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    line-height: 1.6;
+    line-height: 2;
     margin: 0;
     padding: 0;
     min-height: 100vh;
@@ -113,7 +113,6 @@ html, body {
 }
 
 input:checked + .slider:before {
-    content: "🌙";
     transform: translateX(30px);
 }
 
@@ -249,11 +248,15 @@ a:hover {
     color: rgba(255, 255, 255, 0.85)
 }
 
-/* container */
+[data-theme="dark"] .hero p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .container {
-    max-width: 1180px;
-    margin: 40px auto;
-    padding: 0 18px
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 80vh;
 }
 
 /* stat cards */
@@ -269,7 +272,13 @@ a:hover {
     padding: 18px;
     border-radius: 14px;
     box-shadow: var(--shadow);
-    border: 1px solid rgba(15, 23, 42, 0.03)
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .stat-number {
@@ -598,7 +607,6 @@ select {
     width: 100%;
 }
 
-/* 6️⃣ Smooth transitions when switching pages or elements */
 body {
     transition: background 0.4s ease, color 0.4s ease;
 }
