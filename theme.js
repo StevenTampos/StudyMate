@@ -15,7 +15,6 @@ function initializeTheme() {
 function applyTheme(theme) {
     // Update the theme on the root element
     document.documentElement.setAttribute('data-theme', theme);
-    document.body.classList.toggle('dark-mode', theme === 'dark');
     
     // Update all theme toggles on the page
     const themeToggles = document.querySelectorAll('#themeToggle');

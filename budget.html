@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Finance Management - StudyMate</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="theme.js" defer></script>
+    <style>
+        .finance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .finance-summary {
+            background: var(--card-bg);
+            border-radius: var(--card-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+        }
+        .summary-item h3 {
+            margin: 0 0 5px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .summary-item p {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .expense-form {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .expense-list {
+            margin-top: 20px;
+        }
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+        .expense-details {
+            flex-grow: 1;
+        }
+        .expense-amount {
+            font-weight: 600;
+            margin-left: 15px;
+        }
+        .expense-category {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .delete-btn {
+            color: var(--danger);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="brand">StudyMate</div>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="deadlines.html">Deadlines</a>
+            <a href="subjects.html">Subjects</a>
+            <a href="budget.html" class="active">Finance</a>
+            <a href="profile.html">Profile</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Finance Management</h1>
+        <p>Track your expenses and manage your budget</p>
+    </section>
+
+    <div class="container">
+        <div class="finance-summary">
+            <h2>Financial Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <h3>Monthly Allowance</h3>
+                    <p id="monthly-allowance">₱0.00</p>
+                </div>
+                <div class="summary-item">
+                    <h3>Total Expenses</h3>
+                    <p id="total-expenses">₱0.00</p>
+                </div>
+                <div class="summary-item" style="background: var(--primary); color: white;">
+                    <h3>Remaining Balance</h3>
+                    <p id="balance">₱0.00</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Add New Expense</h2>
+            <form id="expense-form" class="expense-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="expense-amount">Amount (₱)</label>
+                        <input type="number" id="expense-amount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expense-category">Category</label>
+                        <select id="expense-category" required>
+                            <option value="">Select Category</option>
+                            <option value="food">Food & Drinks</option>
+                            <option value="transportation">Transportation</option>
+                            <option value="school">School Supplies</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="bills">Bills</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="expense-description">Description</label>
+                    <input type="text" id="expense-description" placeholder="What was this expense for?" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-date">Date</label>
+                    <input type="date" id="expense-date" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" id="set-allowance-btn">Set Monthly Allowance</button>
+                    <button type="submit" class="btn primary">Add Expense</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <h2>Expense History</h2>
+                <div class="controls">
+                    <select id="month-filter" class="select">
+                        <option value="all">All Months</option>
+                        <!-- Will be populated by JavaScript -->
+                    </select>
+                </div>
+            </div>
+            <div id="expense-list" class="expense-list">
+                <!-- Expenses will be added here by JavaScript -->
+                <p class="empty-state">No expenses recorded yet. Add your first expense above!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Finance Management Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize variables
+            let monthlyAllowance = parseFloat(localStorage.getItem('monthlyAllowance')) || 0;
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            
+            // DOM Elements
+            const expenseForm = document.getElementById('expense-form');
+            const expenseList = document.getElementById('expense-list');
+            const monthlyAllowanceEl = document.getElementById('monthly-allowance');
+            const totalExpensesEl = document.getElementById('total-expenses');
+            const balanceEl = document.getElementById('balance');
+            const setAllowanceBtn = document.getElementById('set-allowance-btn');
+            const monthFilter = document.getElementById('month-filter');
+
+            // Set current date as default
+            document.getElementById('expense-date').valueAsDate = new Date();
+
+            // Populate month filter
+            populateMonthFilter();
+
+            // Update UI
+            updateUI();
+
+            // Event Listeners
+            expenseForm.addEventListener('submit', handleAddExpense);
+            setAllowanceBtn.addEventListener('click', setMonthlyAllowance);
+            monthFilter.addEventListener('change', filterExpensesByMonth);
+
+            // Initialize theme
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+
+            // Functions
+            function updateUI() {
+                // Update summary
+                monthlyAllowanceEl.textContent = `₱${monthlyAllowance.toFixed(2)}`;
+                
+                const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+                totalExpensesEl.textContent = `₱${totalExpenses.toFixed(2)}`;
+                
+                const balance = monthlyAllowance - totalExpenses;
+                balanceEl.textContent = `₱${balance.toFixed(2)}`;
+                
+                // Update list
+                renderExpenses(expenses);
+            }
+
+            function handleAddExpense(e) {
+                e.preventDefault();
+                
+                const amount = parseFloat(document.getElementById('expense-amount').value);
+                const category = document.getElementById('expense-category').value;
+                const description = document.getElementById('expense-description').value;
+                const date = document.getElementById('expense-date').value;
+                
+                if (!amount || !category || !description || !date) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                const newExpense = {
+                    id: Date.now(),
+                    amount,
+                    category,
+                    description,
+                    date
+                };
+                
+                expenses.push(newExpense);
+                saveExpenses();
+                updateUI();
+                expenseForm.reset();
+                document.getElementById('expense-date').valueAsDate = new Date();
+            }
+
+            function renderExpenses(expensesToRender) {
+                if (expensesToRender.length === 0) {
+                    expenseList.innerHTML = '<p class="empty-state">No expenses recorded yet. Add your first expense above!</p>';
+                    return;
+                }
+                
+                expenseList.innerHTML = '';
+                
+                expensesToRender.forEach(expense => {
+                    const expenseEl = document.createElement('div');
+                    expenseEl.className = 'expense-item';
+                    expenseEl.innerHTML = `
+                        <div class="expense-details">
+                            <div>${expense.description}</div>
+                            <span class="expense-category">${formatCategory(expense.category)}</span>
+                            <small>${formatDate(expense.date)}</small>
+                        </div>
+                        <div class="expense-amount">₱${parseFloat(expense.amount).toFixed(2)}</div>
+                        <button class="delete-btn" onclick="deleteExpense(${expense.id})">×</button>
+                    `;
+                    expenseList.appendChild(expenseEl);
+                });
+            }
+
+            function setMonthlyAllowance() {
+                const newAllowance = prompt('Enter your monthly allowance (₱):', monthlyAllowance || '');
+                if (newAllowance !== null) {
+                    monthlyAllowance = parseFloat(newAllowance) || 0;
+                    localStorage.setItem('monthlyAllowance', monthlyAllowance);
+                    updateUI();
+                }
+            }
+
+            function deleteExpense(id) {
+                if (confirm('Are you sure you want to delete this expense?')) {
+                    expenses = expenses.filter(exp => exp.id !== id);
+                    saveExpenses();
+                    updateUI();
+                }
+            }
+
+            function saveExpenses() {
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+            }
+
+            function filterExpensesByMonth() {
+                const selectedMonth = monthFilter.value;
+                if (selectedMonth === 'all') {
+                    renderExpenses(expenses);
+                    return;
+                }
+                
+                const filtered = expenses.filter(expense => {
+                    const expenseDate = new Date(expense.date);
+                    return expenseDate.getMonth() === parseInt(selectedMonth) && 
+                           expenseDate.getFullYear() === new Date().getFullYear();
+                });
+                
+                renderExpenses(filtered);
+            }
+
+            function populateMonthFilter() {
+                const months = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                
+                months.forEach((month, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = month;
+                    monthFilter.appendChild(option);
+                });
+            }
+
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString('en-US', options);
+            }
+
+            function formatCategory(category) {
+                return category.charAt(0).toUpperCase() + category.slice(1);
+            }
+        });
+
+        // Make deleteExpense available globally for inline event handlers
+        window.deleteExpense = function(id) {
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const updatedExpenses = expenses.filter(exp => exp.id !== id);
+            localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
+            
+            // Refresh the display
+            const event = new Event('expenseDeleted');
+            document.dispatchEvent(event);
+        };
+
+        // Listen for expense deletion events
+        document.addEventListener('expenseDeleted', () => {
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const expenseList = document.getElementById('expense-list');
+            
+            if (expenses.length === 0) {
+                expenseList.innerHTML = '<p class="empty-state">No expenses recorded yet. Add your first expense above!</p>';
+                return;
+            }
+            
+            // Re-render expenses
+            const monthFilter = document.getElementById('month-filter');
+            const selectedMonth = monthFilter ? monthFilter.value : 'all';
+            
+            if (selectedMonth === 'all') {
+                renderExpenses(expenses);
+            } else {
+                const filtered = expenses.filter(expense => {
+                    const expenseDate = new Date(expense.date);
+                    return expenseDate.getMonth() === parseInt(selectedMonth) && 
+                           expenseDate.getFullYear() === new Date().getFullYear();
+                });
+                renderExpenses(filtered);
+            }
+            
+            // Update summary
+            updateUI();
+        });
+
+        function renderExpenses(expensesToRender) {
+            const expenseList = document.getElementById('expense-list');
+            
+            if (expensesToRender.length === 0) {
+                expenseList.innerHTML = '<p class="empty-state">No expenses found for the selected month.</p>';
+                return;
+            }
+            
+            expenseList.innerHTML = '';
+            
+            expensesToRender.forEach(expense => {
+                const expenseEl = document.createElement('div');
+                expenseEl.className = 'expense-item';
+                expenseEl.innerHTML = `
+                    <div class="expense-details">
+                        <div>${expense.description}</div>
+                        <span class="expense-category">${formatCategory(expense.category)}</span>
+                        <small>${formatDate(expense.date)}</small>
+                    </div>
+                    <div class="expense-amount">₱${parseFloat(expense.amount).toFixed(2)}</div>
+                    <button class="delete-btn" onclick="deleteExpense(${expense.id})">×</button>
+                `;
+                expenseList.appendChild(expenseEl);
+            });
+        }
+
+        function updateUI() {
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            const monthlyAllowance = parseFloat(localStorage.getItem('monthlyAllowance')) || 0;
+            
+            const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+            const balance = monthlyAllowance - totalExpenses;
+            
+            // Update summary
+            document.getElementById('monthly-allowance').textContent = `₱${monthlyAllowance.toFixed(2)}`;
+            document.getElementById('total-expenses').textContent = `₱${totalExpenses.toFixed(2)}`;
+            document.getElementById('balance').textContent = `₱${balance.toFixed(2)}`;
+        }
+
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+
+        function formatCategory(category) {
+            return category ? category.charAt(0).toUpperCase() + category.slice(1) : '';
+        }
+    </script>
+</body>
+</html>

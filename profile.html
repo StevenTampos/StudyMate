@@ -10,14 +10,14 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            background: var(--bg) !important;
+            background: var(--bg);
         }
         
         body {
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            background: var(--bg) !important;
+            background: var(--bg);
             transition: background-color 0.3s ease;
         }
         
@@ -25,7 +25,7 @@
             max-width: 600px;
             margin: 40px auto 0;
             padding: 20px 0 40px;
-            background: transparent !important;
+            background: var(--bg);
             transition: background-color 0.3s ease;
         }
         
@@ -47,6 +47,16 @@
         
         .profile-picture-wrapper {
             position: relative;
+            display: inline-block;
+        }
+        
+        .profile-picture {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .profile-picture:hover .profile-picture-actions {
+            display: block !important;
         }
         
         .profile-picture {
@@ -69,30 +79,6 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-        }
-        
-        .edit-picture-btn {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.25s ease;
-            border: 2px solid white;
-        }
-        
-        .edit-picture-btn:hover {
-            background: var(--primary-dark);
-            transform: scale(1.1);
         }
         
         .profile-info-header {
@@ -345,17 +331,18 @@
         <h1>Profile</h1>
         <p>Your account information</p>
     </section>
-    <div class="container profile-container" style="min-height: calc(100vh - 100px); background: transparent !important;">
+    <div class="container profile-container" style="min-height: calc(100vh - 100px);">
         <div class="card">
             <div class="profile-header">
                 <div class="profile-picture-wrapper">
                     <div class="profile-picture" id="profile-picture">
                         <span id="profile-initial">S</span>
+                        <div class="profile-picture-actions" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
+                            <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                            <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+                        </div>
                     </div>
-                    <button class="edit-picture-btn" onclick="document.getElementById('picture-upload').click()" title="Change picture">
-                        📷
-                    </button>
-                    <input type="file" id="picture-upload" accept="image/*" onchange="handlePictureUpload(event)">
+                    <input type="file" id="picture-upload" accept="image/*" onchange="handlePictureUpload(event)" style="display: none;">
                 </div>
                 <div class="profile-info-header">
                     <h2 id="profile-display-name">Student</h2>
@@ -416,7 +403,7 @@
                 </div>
             </div>
             
-            <button class="logout-btn" style="margin-top: 30px;" onclick="logout()">🚪 Logout</button>
+            <button class="logout-btn" style="margin-top: 30px;" onclick="logout()"> Logout</button>
         </div>
         
     </div>
@@ -456,6 +443,7 @@
             const fields = document.querySelectorAll('.editable-field');
             const buttonGroup = document.querySelector('.button-group');
             const editBtn = document.querySelector('.edit-btn');
+            const profilePicture = document.getElementById('profile-picture');
             
             fields.forEach(field => {
                 field.disabled = !enable;
@@ -468,8 +456,38 @@
                 }
             });
             
+            // Show/hide profile picture actions
+            const actions = profilePicture.querySelector('.profile-picture-actions');
+            if (actions) {
+                actions.style.display = enable ? 'block' : 'none';
+            }
+            
             buttonGroup.style.display = enable ? 'flex' : 'none';
             editBtn.style.display = enable ? 'none' : 'block';
+        }
+        
+        // Remove profile picture
+        function removeProfilePicture(event) {
+            event.stopPropagation();
+            const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+            delete profile.picture;
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+            
+            // Reset to initial
+            const profilePicture = document.getElementById('profile-picture');
+            const initial = document.getElementById('profile-initial');
+            profilePicture.style.background = 'var(--header-grad)';
+            profilePicture.innerHTML = `<span id="profile-initial">${initial.textContent}</span>`;
+            
+            // Re-add the actions
+            const actions = document.createElement('div');
+            actions.className = 'profile-picture-actions';
+            actions.style.display = 'none';
+            actions.innerHTML = `
+                <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+            `;
+            profilePicture.appendChild(actions);
         }
         
         // Initialize the page
@@ -524,25 +542,6 @@
             }
         };
         
-        function loadProfile() {
-            try {
-                const saved = localStorage.getItem(PROFILE_KEY);
-                if (saved) return JSON.parse(saved);
-            } catch (e) {
-                console.error("Failed to load profile", e);
-            }
-            return {
-                name: "Student",
-                username: "@student",
-                email: "student@studymate.com",
-                picture: null
-            };
-        }
-        
-        function saveProfile(profile) {
-            localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-        }
-        
         function loadTheme() {
             return localStorage.getItem(THEME_KEY) || "light";
         }
@@ -575,40 +574,6 @@
             saveTheme(themeName);
         }
         
-        function renderProfile() {
-            const profile = loadProfile();
-            const tasks = loadTasks();
-            
-            // Update header display
-            document.getElementById("profile-display-name").textContent = profile.name;
-            document.getElementById("profile-display-username").textContent = profile.username;
-            
-            // Update profile picture
-            const pictureDiv = document.getElementById("profile-picture");
-            const initialSpan = document.getElementById("profile-initial");
-            
-            if (profile.picture) {
-                pictureDiv.style.background = "none";
-                pictureDiv.innerHTML = `<img src="${profile.picture}" alt="Profile Picture">`;
-            } else {
-                pictureDiv.style.background = "var(--header-grad)";
-                pictureDiv.innerHTML = `<span id="profile-initial">${profile.name.charAt(0).toUpperCase()}</span>`;
-            }
-            
-            document.getElementById("user-name").textContent = profile.name;
-            document.getElementById("user-username").textContent = profile.username;
-            document.getElementById("user-email").textContent = profile.email;
-            
-            // Get unique subjects
-            const subjects = [...new Set(tasks.map(t => t.subject).filter(s => s && s.trim()))].sort();
-            const subjectsText = subjects.length > 0 ? subjects.join(", ") : "No subjects yet";
-            document.getElementById("user-subjects").textContent = subjectsText;
-            
-            // Apply saved theme
-            const savedTheme = loadTheme();
-            applyTheme(savedTheme);
-        }
-        
         function handlePictureUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -630,29 +595,19 @@
                 const profile = loadProfile();
                 profile.picture = e.target.result;
                 saveProfile(profile);
-                renderProfile();
+                
+                // Update the profile picture display
+                const profilePicture = document.getElementById('profile-picture');
+                profilePicture.style.background = 'none';
+                profilePicture.innerHTML = `
+                    <img src="${e.target.result}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    <div class="profile-picture-actions" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
+                        <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                        <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+                    </div>
+                `;
             };
             reader.readAsDataURL(file);
-        }
-        
-        function editProfile() {
-            const profile = loadProfile();
-            
-            const name = prompt("Enter your name:", profile.name);
-            if (name === null) return;
-            
-            const username = prompt("Enter your username:", profile.username);
-            if (username === null) return;
-            
-            const email = prompt("Enter your email:", profile.email);
-            if (email === null) return;
-            
-            profile.name = name.trim() || profile.name;
-            profile.username = username.trim() || profile.username;
-            profile.email = email.trim() || profile.email;
-            
-            saveProfile(profile);
-            renderProfile();
         }
         
         function logout() {
