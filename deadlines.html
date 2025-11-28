@@ -1,12 +1,105 @@
 <!doctype html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>StudyMate — Deadlines</title>
     <link rel="stylesheet" href="style.css">
-    <script src="js/theme.js" defer></script>
+    <script src="theme.js"></script>
+    <style>
+        .deadline-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        
+        .deadline-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .deadline-item.overdue {
+            border-left: 6px solid var(--danger);
+            background: rgba(245, 101, 101, 0.1);
+        }
+        
+        .deadline-item.upcoming {
+            border-left: 6px solid #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+        
+        .deadline-info {
+            flex: 1;
+        }
+        
+        .deadline-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        
+        .deadline-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .deadline-subject {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .deadline-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .deadline-status {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .status-overdue {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .status-upcoming {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .status-future {
+            background: var(--success);
+            color: white;
+        }
+        
+        .empty-deadlines {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        
+        .empty-deadlines h3 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+    </style>
 </head>
 
 <body data-page="deadlines">
@@ -30,10 +123,21 @@
         <div class="card">
             <div class="section-header">
                 <div class="section-title">Upcoming Deadlines</div>
+                <div class="controls">
+                    <select id="deadline-filter" class="select">
+                        <option value="all">All Deadlines</option>
+                        <option value="overdue">Overdue</option>
+                        <option value="upcoming">Upcoming (7 days)</option>
+                        <option value="future">Future</option>
+                    </select>
+                </div>
             </div>
 
             <div id="deadlines-list">
-                <div class="empty">Loading deadlines...</div>
+                <div class="empty-deadlines">
+                    <h3>No deadlines yet</h3>
+                    <p>Add tasks from the Dashboard to see deadlines here</p>
+                </div>
             </div>
         </div>
     </div>
@@ -42,8 +146,106 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             renderDeadlines();
+            
+            // Filter functionality
+            document.getElementById('deadline-filter')?.addEventListener('change', (e) => {
+                renderDeadlines(e.target.value);
+            });
         });
+
+        function renderDeadlines(filter = 'all') {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const deadlinesList = document.getElementById('deadlines-list');
+            
+            if (tasks.length === 0) {
+                deadlinesList.innerHTML = `
+                    <div class="empty-deadlines">
+                        <h3>No deadlines yet</h3>
+                        <p>Add tasks from the Dashboard to see deadlines here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by deadline
+            const sortedTasks = tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+            
+            // Filter tasks
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const sevenDaysFromNow = new Date(today);
+            sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+            
+            const filteredTasks = sortedTasks.filter(task => {
+                const deadline = new Date(task.deadline);
+                deadline.setHours(0, 0, 0, 0);
+                
+                if (filter === 'overdue') {
+                    return deadline < today && !task.completed;
+                } else if (filter === 'upcoming') {
+                    return deadline >= today && deadline <= sevenDaysFromNow && !task.completed;
+                } else if (filter === 'future') {
+                    return deadline > sevenDaysFromNow && !task.completed;
+                }
+                return !task.completed; // 'all' - show all non-completed
+            });
+            
+            if (filteredTasks.length === 0) {
+                deadlinesList.innerHTML = `
+                    <div class="empty-deadlines">
+                        <h3>No ${filter !== 'all' ? filter : ''} deadlines</h3>
+                        <p>Try selecting a different filter</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            deadlinesList.innerHTML = filteredTasks.map(task => {
+                const deadline = new Date(task.deadline);
+                deadline.setHours(0, 0, 0, 0);
+                const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+                
+                let status = 'future';
+                let statusText = 'Upcoming';
+                let itemClass = '';
+                
+                if (daysUntil < 0) {
+                    status = 'overdue';
+                    statusText = `Overdue by ${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''}`;
+                    itemClass = 'overdue';
+                } else if (daysUntil === 0) {
+                    status = 'upcoming';
+                    statusText = 'Due Today!';
+                    itemClass = 'upcoming';
+                } else if (daysUntil <= 7) {
+                    status = 'upcoming';
+                    statusText = `Due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+                    itemClass = 'upcoming';
+                } else {
+                    statusText = `${daysUntil} days remaining`;
+                }
+                
+                return `
+                    <div class="deadline-item ${itemClass}">
+                        <div class="deadline-info">
+                            <div class="deadline-title">${task.title}</div>
+                            <div class="deadline-meta">
+                                <span class="deadline-subject">${task.subject}</span>
+                                <span class="deadline-date">📅 ${formatDate(task.deadline)}</span>
+                            </div>
+                        </div>
+                        <div class="deadline-status status-${status}">
+                            ${statusText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function formatDate(dateString) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
     </script>
 </body>
-
 </html>
