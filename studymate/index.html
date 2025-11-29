@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>StudyMate — Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="theme.js" defer></script>
+</head>
+
+<body data-page="dashboard">
+    <nav class="navbar">
+        <div class="brand">StudyMate</div>
+        <div class="nav-links">
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="deadlines.html">Deadlines</a>
+            <a href="subjects.html">Subjects</a>
+            <a href="budget.html">Finance</a>
+            <a href="profile.html">Profile</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Welcome to StudyMate</h1>
+        <p>Your Student Productivity Hub</p>
+    </section>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="total-tasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completed-tasks">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pending-tasks">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="overdue-tasks">0</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title">Task Dashboard</div>
+                <div class="controls">
+                    <select id="subject-filter" class="select" onchange="renderDashboard(this.value)">
+                        <option value="all">All Subjects</option>
+                    </select>
+                    <button class="add-btn open-add">+ Add New Task</button>
+                </div>
+            </div>
+
+            <div id="task-list" class="task-list">
+                <div class="empty">Loading tasks...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // initial render on dashboard
+        document.addEventListener("DOMContentLoaded", () => {
+            renderDashboard("all");
+            // hook subject filter element to refresh on change
+            const subj = document.querySelector("#subject-filter");
+            if (subj) subj.addEventListener("change", (e) => renderDashboard(e.target.value));
+        });
+    </script>
+</body>
+
+</html>
