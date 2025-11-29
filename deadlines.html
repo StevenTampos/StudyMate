@@ -18,40 +18,40 @@
             border: 1px solid var(--border-color);
             transition: all 0.2s ease;
         }
-        
+
         .deadline-item:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .deadline-item.overdue {
             border-left: 6px solid var(--danger);
             background: rgba(245, 101, 101, 0.1);
         }
-        
+
         .deadline-item.upcoming {
             border-left: 6px solid #f59e0b;
             background: rgba(245, 158, 11, 0.1);
         }
-        
+
         .deadline-info {
             flex: 1;
         }
-        
+
         .deadline-title {
             font-weight: 700;
             font-size: 1.1rem;
             color: var(--text-primary);
             margin-bottom: 6px;
         }
-        
+
         .deadline-meta {
             display: flex;
             gap: 12px;
             align-items: center;
             flex-wrap: wrap;
         }
-        
+
         .deadline-subject {
             background: var(--primary);
             color: white;
@@ -60,12 +60,12 @@
             font-size: 0.85rem;
             font-weight: 600;
         }
-        
+
         .deadline-date {
             color: var(--text-secondary);
             font-size: 0.9rem;
         }
-        
+
         .deadline-status {
             padding: 6px 14px;
             border-radius: 20px;
@@ -73,31 +73,212 @@
             font-weight: 600;
             text-align: center;
         }
-        
+
         .status-overdue {
             background: var(--danger);
             color: white;
         }
-        
+
         .status-upcoming {
             background: #f59e0b;
             color: white;
         }
-        
+
         .status-future {
             background: var(--success);
             color: white;
         }
-        
+
         .empty-deadlines {
             text-align: center;
             padding: 60px 20px;
             color: var(--muted);
         }
-        
+
         .empty-deadlines h3 {
             font-size: 1.5rem;
             margin-bottom: 8px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .calendar-nav:hover {
+            background: var(--primary-dark, #0056b3);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day-header {
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-secondary);
+            padding: 10px;
+        }
+
+        .calendar-day {
+            height: 100px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--card-bg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-day.today {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+        }
+
+        .calendar-day.has-deadlines {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .calendar-day-number {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .calendar-task {
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            background: var(--primary);
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .calendar-task.overdue {
+            background: var(--danger);
+        }
+
+        .calendar-day:hover {
+            cursor: pointer;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .calendar-day.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--primary);
+        }
+
+        /* Day details modal */
+        .day-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .day-modal {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .day-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .day-modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .day-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .day-modal-close:hover {
+            background: var(--muted);
+        }
+
+        .day-task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .day-task-info {
+            flex: 1;
+        }
+
+        .day-task-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .day-task-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .day-no-deadlines {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--success);
+        }
+
+        .day-no-deadlines h3 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .day-no-deadlines p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
         }
     </style>
 </head>
@@ -122,64 +303,79 @@
     <div class="container">
         <div class="card">
             <div class="section-header">
-                <div class="section-title">Upcoming Deadlines</div>
-                <div class="controls">
-                    <select id="deadline-filter" class="select">
-                        <option value="all">All Deadlines</option>
-                        <option value="overdue">Overdue</option>
-                        <option value="upcoming">Upcoming (7 days)</option>
-                        <option value="future">Future</option>
-                    </select>
-                </div>
+                <div class="section-title">Deadlines Calendar</div>
             </div>
 
-            <div id="deadlines-list">
-                <div class="empty-deadlines">
-                    <h3>No deadlines yet</h3>
-                    <p>Add tasks from the Dashboard to see deadlines here</p>
+            <div id="calendar-container">
+                <div class="calendar-header">
+                    <button id="prev-month" class="calendar-nav"><</button>
+                    <h2 id="calendar-title"></h2>
+                    <button id="next-month" class="calendar-nav">></button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="day-header">Sun</div>
+                    <div class="day-header">Mon</div>
+                    <div class="day-header">Tue</div>
+                    <div class="day-header">Wed</div>
+                    <div class="day-header">Thu</div>
+                    <div class="day-header">Fri</div>
+                    <div class="day-header">Sat</div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Day Details Modal -->
+    <div id="day-modal-backdrop" class="day-modal-backdrop">
+        <div class="day-modal">
+            <div class="day-modal-header">
+                <div id="day-modal-title" class="day-modal-title">Day Details</div>
+                <button id="day-modal-close" class="day-modal-close">×</button>
+            </div>
+            <div id="day-modal-content"></div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
+        let currentDate = new Date();
+
         document.addEventListener("DOMContentLoaded", () => {
-            renderDeadlines();
-            
-            // Filter functionality
-            document.getElementById('deadline-filter')?.addEventListener('change', (e) => {
-                renderDeadlines(e.target.value);
+            renderCalendar();
+
+            // Navigation
+            document.getElementById('prev-month').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            document.getElementById('next-month').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            // Modal close functionality
+            document.getElementById('day-modal-close')?.addEventListener('click', closeDayModal);
+            document.getElementById('day-modal-backdrop')?.addEventListener('click', (e) => {
+                if (e.target.id === 'day-modal-backdrop') {
+                    closeDayModal();
+                }
             });
         });
 
-        function renderDeadlines(filter = 'all') {
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            const deadlinesList = document.getElementById('deadlines-list');
-            
-            if (tasks.length === 0) {
-                deadlinesList.innerHTML = `
-                    <div class="empty-deadlines">
-                        <h3>No deadlines yet</h3>
-                        <p>Add tasks from the Dashboard to see deadlines here</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Sort by deadline
-            const sortedTasks = tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-            
+        function renderCalendar(filter = 'all') {
+            const tasks = JSON.parse(localStorage.getItem('studymate_tasks_v1')) || [];
+
             // Filter tasks
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const sevenDaysFromNow = new Date(today);
             sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-            
-            const filteredTasks = sortedTasks.filter(task => {
-                const deadline = new Date(task.deadline);
+
+            const filteredTasks = tasks.filter(task => {
+                const deadline = new Date(task.due_date);
                 deadline.setHours(0, 0, 0, 0);
-                
+
                 if (filter === 'overdue') {
                     return deadline < today && !task.completed;
                 } else if (filter === 'upcoming') {
@@ -189,62 +385,172 @@
                 }
                 return !task.completed; // 'all' - show all non-completed
             });
-            
-            if (filteredTasks.length === 0) {
-                deadlinesList.innerHTML = `
-                    <div class="empty-deadlines">
-                        <h3>No ${filter !== 'all' ? filter : ''} deadlines</h3>
-                        <p>Try selecting a different filter</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            deadlinesList.innerHTML = filteredTasks.map(task => {
-                const deadline = new Date(task.deadline);
+
+            // Group tasks by date
+            const tasksByDate = {};
+            filteredTasks.forEach(task => {
+                const deadline = new Date(task.due_date);
                 deadline.setHours(0, 0, 0, 0);
-                const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
-                
-                let status = 'future';
-                let statusText = 'Upcoming';
-                let itemClass = '';
-                
-                if (daysUntil < 0) {
-                    status = 'overdue';
-                    statusText = `Overdue by ${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''}`;
-                    itemClass = 'overdue';
-                } else if (daysUntil === 0) {
-                    status = 'upcoming';
-                    statusText = 'Due Today!';
-                    itemClass = 'upcoming';
-                } else if (daysUntil <= 7) {
-                    status = 'upcoming';
-                    statusText = `Due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
-                    itemClass = 'upcoming';
-                } else {
-                    statusText = `${daysUntil} days remaining`;
+                const dateKey = deadline.toDateString();
+                if (!tasksByDate[dateKey]) tasksByDate[dateKey] = [];
+                tasksByDate[dateKey].push(task);
+            });
+
+            // Update calendar title
+            const title = document.getElementById('calendar-title');
+            title.textContent = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            // Clear previous days (keep headers)
+            const calendarGrid = document.querySelector('.calendar-grid');
+            const dayElements = calendarGrid.querySelectorAll('.calendar-day');
+            dayElements.forEach(day => day.remove());
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // First day of the month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            // Generate 42 days (6 weeks)
+            for (let i = 0; i < 42; i++) {
+                const day = new Date(startDate);
+                day.setDate(startDate.getDate() + i);
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+
+                // Check if day is today
+                const isToday = day.toDateString() === today.toDateString();
+                if (isToday) dayDiv.classList.add('today');
+
+                // Check if day has deadlines
+                const dateKey = day.toDateString();
+                const dayTasks = tasksByDate[dateKey] || [];
+                if (dayTasks.length > 0) dayDiv.classList.add('has-deadlines');
+
+                // Day number
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'calendar-day-number';
+                dayNumber.textContent = day.getDate();
+                dayDiv.appendChild(dayNumber);
+
+                // Tasks for this day
+                dayTasks.slice(0, 3).forEach(task => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'calendar-task';
+                    const deadline = new Date(task.due_date);
+                    const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+                    if (daysUntil < 0) taskDiv.classList.add('overdue');
+                    taskDiv.textContent = task.title.length > 10 ? task.title.substring(0, 10) + '...' : task.title;
+                    dayDiv.appendChild(taskDiv);
+                });
+
+                if (dayTasks.length > 3) {
+                    const moreDiv = document.createElement('div');
+                    moreDiv.className = 'calendar-task';
+                    moreDiv.textContent = `+${dayTasks.length - 3} more`;
+                    dayDiv.appendChild(moreDiv);
                 }
-                
-                return `
-                    <div class="deadline-item ${itemClass}">
-                        <div class="deadline-info">
-                            <div class="deadline-title">${task.title}</div>
-                            <div class="deadline-meta">
-                                <span class="deadline-subject">${task.subject}</span>
-                                <span class="deadline-date">📅 ${formatDate(task.deadline)}</span>
-                            </div>
-                        </div>
-                        <div class="deadline-status status-${status}">
-                            ${statusText}
-                        </div>
-                    </div>
-                `;
-            }).join('');
+
+                // Make day clickable
+                dayDiv.addEventListener('click', () => showDayModal(day, dayTasks));
+
+                calendarGrid.appendChild(dayDiv);
+            }
         }
-        
+
         function formatDate(dateString) {
             const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
             return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+
+        function showDayModal(date, tasks) {
+            const modalTitle = document.getElementById('day-modal-title');
+            const modalContent = document.getElementById('day-modal-content');
+            const modalBackdrop = document.getElementById('day-modal-backdrop');
+
+            // Set modal title
+            modalTitle.textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Clear previous content
+            modalContent.innerHTML = '';
+
+            if (tasks.length === 0) {
+                // No deadlines message
+                const noDeadlinesDiv = document.createElement('div');
+                noDeadlinesDiv.className = 'day-no-deadlines';
+                noDeadlinesDiv.innerHTML = `
+                    <h3>yey no deadlines :D</h3>
+                    <p>Enjoy your free day!</p>
+                `;
+                modalContent.appendChild(noDeadlinesDiv);
+            } else {
+                // Show tasks
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'day-task-item';
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const deadline = new Date(task.due_date);
+                    const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+
+                    let statusText = '';
+                    let statusClass = '';
+
+                    if (daysUntil < 0) {
+                        statusText = 'Overdue';
+                        statusClass = 'status-overdue';
+                    } else if (daysUntil === 0) {
+                        statusText = 'Due Today';
+                        statusClass = 'status-upcoming';
+                    } else if (daysUntil <= 7) {
+                        statusText = `Due in ${daysUntil} day${daysUntil > 1 ? 's' : ''}`;
+                        statusClass = 'status-upcoming';
+                    } else {
+                        statusText = 'Future';
+                        statusClass = 'status-future';
+                    }
+
+                    // Format the due date with time
+                    const dueTime = task.due_time || '23:59';
+                    const dueDateTime = new Date(task.due_date + 'T' + dueTime + ':00');
+                    const timeString = dueDateTime.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+
+                    taskItem.innerHTML = `
+                        <div class="day-task-info">
+                            <div class="day-task-title">${task.title}</div>
+                            <div class="day-task-meta">
+                                <span class="deadline-subject">${task.subject}</span>
+                                <span class="deadline-time">Due at ${timeString}</span>
+                                <span class="deadline-status ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    modalContent.appendChild(taskItem);
+                });
+            }
+
+            // Show modal
+            modalBackdrop.style.display = 'flex';
+        }
+
+        function closeDayModal() {
+            const modalBackdrop = document.getElementById('day-modal-backdrop');
+            modalBackdrop.style.display = 'none';
         }
     </script>
 </body>

@@ -8,6 +8,7 @@ const STORAGE_KEY = "studymate_tasks_v1";
     title: 'text',
     subject: 'Math',
     due_date: 'YYYY-MM-DD',
+    due_time: 'HH:MM',
     priority: 'low|medium|high',
     completed: false,
     created_at: timestamp
@@ -36,51 +37,45 @@ function formatDate(d) {
     const date = new Date(d + "T00:00:00");
     return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
-function isOverdue(d) {
+function isOverdue(d, t = "23:59") {
     const today = new Date();
-    const due = new Date(d + "T23:59:59");
+    const due = new Date(d + "T" + t + ":00");
     return due < today;
 }
 
 /* Dashboard: render stats and task list with optional filter */
-function renderDashboard(filterSubject = "all") {
+function renderDashboard(filter = "all") {
     const tasks = loadTasks();
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
     const pending = total - completed;
-    const overdue = tasks.filter(t => !t.completed && isOverdue(t.due_date)).length;
 
     // stats
     const elTotal = document.querySelector("#total-tasks");
     const elCompleted = document.querySelector("#completed-tasks");
     const elPending = document.querySelector("#pending-tasks");
-    const elOverdue = document.querySelector("#overdue-tasks");
+    const elSubjects = document.querySelector("#subjects-count");
     if (elTotal) elTotal.textContent = total;
     if (elCompleted) elCompleted.textContent = completed;
     if (elPending) elPending.textContent = pending;
-    if (elOverdue) elOverdue.textContent = overdue;
-
-    // subject dropdown (unique subjects)
-    const subjectSet = new Set(tasks.map(t => t.subject).filter(s => s && s.trim().length));
-    const subjectSelect = document.querySelector("#subject-filter");
-    if (subjectSelect) {
-        const current = subjectSelect.value || "all";
-        subjectSelect.innerHTML = `<option value="all">All Subjects</option>`;
-        Array.from(subjectSet).sort().forEach(s => {
-            const opt = document.createElement("option");
-            opt.value = s;
-            opt.textContent = s;
-            subjectSelect.appendChild(opt);
-        });
-        subjectSelect.value = current;
+    if (elSubjects) {
+        const subjectSet = new Set(tasks.map(t => t.subject).filter(s => s && s.trim().length));
+        elSubjects.textContent = subjectSet.size;
     }
 
     // task list
-    const list = document.querySelector("#task-list");
+    const list = document.querySelector("#tasks-list");
     if (!list) return;
-    const filtered = filterSubject === "all" ? tasks : tasks.filter(t => t.subject === filterSubject);
+
+    let filtered = tasks;
+    if (filter === "pending") {
+        filtered = tasks.filter(t => !t.completed);
+    } else if (filter === "completed") {
+        filtered = tasks.filter(t => t.completed);
+    }
+
     if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty">No tasks found. Click <strong>Add New Task</strong> to create one.</div>`;
+        list.innerHTML = `<div class="empty">No tasks found. Click <strong>Add Task</strong> to create one.</div>`;
         return;
     }
 
@@ -91,7 +86,7 @@ function renderDashboard(filterSubject = "all") {
     });
 
     list.innerHTML = filtered.map(t => {
-        const overdueClass = !t.completed && isOverdue(t.due_date) ? "overdue" : "";
+        const overdueClass = !t.completed && isOverdue(t.due_date, t.due_time) ? "overdue" : "";
         const completedClass = t.completed ? "completed" : "";
         return `
       <div class="task-item ${completedClass} ${overdueClass}" data-id="${t.id}">
@@ -101,7 +96,7 @@ function renderDashboard(filterSubject = "all") {
             <div class="task-title">${escapeHtml(t.title)}</div>
             <div class="task-meta">
               <div class="task-subject">${escapeHtml(t.subject)}</div>
-              <div>Due: ${formatDate(t.due_date)} ${(!t.completed && isOverdue(t.due_date)) ? '<span style="color:var(--danger);font-weight:700;margin-left:6px">Overdue</span>' : ''}</div>
+              <div>Due: ${formatDate(t.due_date)} at ${t.due_time} ${(!t.completed && isOverdue(t.due_date, t.due_time)) ? '<span style="color:var(--danger);font-weight:700;margin-left:6px">Overdue</span>' : ''}</div>
               <div style="padding-left:6px">${capitalize(t.priority)} priority</div>
             </div>
           </div>
@@ -127,15 +122,15 @@ function renderDeadlines() {
     // sort by due date ascending
     const sorted = [...tasks].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
     document.querySelector("#deadlines-list").innerHTML = sorted.map(t => {
-        const overdueClass = !t.completed && isOverdue(t.due_date) ? "overdue" : "";
+        const overdueClass = !t.completed && isOverdue(t.due_date, t.due_time) ? "overdue" : "";
         return `
       <div class="deadline-item ${overdueClass}">
         <div>
           <div style="font-weight:700">${escapeHtml(t.title)}</div>
-          <div style="color:var(--muted);font-size:0.9rem">${escapeHtml(t.subject)} • ${formatDate(t.due_date)}</div>
+          <div style="color:var(--muted);font-size:0.9rem">${escapeHtml(t.subject)} • ${formatDate(t.due_date)} at ${t.due_time}</div>
         </div>
         <div style="display:flex;gap:10px;align-items:center">
-          ${t.completed ? '<div style="color:var(--success);font-weight:700">Completed</div>' : (isOverdue(t.due_date) ? '<div style="color:var(--danger);font-weight:700">Overdue</div>' : `<div style="color:var(--muted)">${daysLeftText(t.due_date)}</div>`)}
+          ${t.completed ? '<div style="color:var(--success);font-weight:700">Completed</div>' : (isOverdue(t.due_date, t.due_time) ? '<div style="color:var(--danger);font-weight:700">Overdue</div>' : `<div style="color:var(--muted)">${daysLeftText(t.due_date, t.due_time)}</div>`)}
           <button class="icon-btn delete-btn" onclick="deleteTask('${t.id}')">🗑</button>
         </div>
       </div>
@@ -177,9 +172,9 @@ function renderSubjects() {
 }
 
 /* helpers for days left */
-function daysLeftText(d) {
+function daysLeftText(d, t = "23:59") {
     const today = new Date();
-    const due = new Date(d + "T23:59:59");
+    const due = new Date(d + "T" + t + ":00");
     const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
     if (diff < 0) return `${Math.abs(diff)} day(s) overdue`;
     if (diff === 0) return `Due today`;
@@ -188,13 +183,14 @@ function daysLeftText(d) {
 }
 
 /* CRUD actions used across pages */
-function addTask({ title, subject, due_date, priority }) {
+function addTask({ title, subject, due_date, due_time, priority }) {
     const tasks = loadTasks();
     const t = {
         id: uid(),
         title: title.trim(),
         subject: subject.trim(),
         due_date: due_date,
+        due_time: due_time || "23:59",
         priority: priority || "medium",
         completed: false,
         created_at: new Date().toISOString()
@@ -267,6 +263,10 @@ function showModal(data = null) {
         <input class="input" type="date" id="m-due" value="${data ? data.due_date : ''}">
       </div>
       <div class="form-row">
+        <label>Due Time</label>
+        <input class="input" type="time" id="m-time" value="${data ? data.due_time : new Date().toTimeString().slice(0,5)}">
+      </div>
+      <div class="form-row">
         <label>Priority</label>
         <select class="input" id="m-priority">
           <option value="low"${data && data.priority === 'low' ? ' selected' : ''}>Low</option>
@@ -291,10 +291,18 @@ function showModal(data = null) {
     document.getElementById("modal-close").onclick = () => closeModal();
     document.getElementById("modal-cancel").onclick = () => closeModal();
 
+    // close modal when clicking backdrop
+    backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+            closeModal();
+        }
+    });
+
     document.getElementById("modal-save").onclick = () => {
         const title = document.getElementById("m-title").value.trim();
         const subject = document.getElementById("m-subject").value.trim();
         const due = document.getElementById("m-due").value;
+        const time = document.getElementById("m-time").value;
         const priority = document.getElementById("m-priority").value;
 
         if (!title || !subject || !due) {
@@ -303,11 +311,11 @@ function showModal(data = null) {
         }
 
         if (data && data._edit) {
-            const updated = { ...data, title, subject, due_date: due, priority };
+            const updated = { ...data, title, subject, due_date: due, due_time: time, priority };
             delete updated._edit;
             updateTask(updated);
         } else {
-            addTask({ title, subject, due_date: due, priority });
+            addTask({ title, subject, due_date: due, due_time: time, priority });
         }
         closeModal();
     };
@@ -351,16 +359,7 @@ document.addEventListener("click", (e) => {
 
 // app.js (snippet)
 const addBtn = document.querySelector('.open-add');
-const modalBackdrop = document.querySelector('.modal-backdrop');
 
 addBtn.addEventListener('click', () => {
-    modalBackdrop.style.display = 'flex';
-    modalBackdrop.classList.add('show');
-});
-
-modalBackdrop.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal-backdrop')) {
-        modalBackdrop.classList.remove('show');
-        setTimeout(() => (modalBackdrop.style.display = 'none'), 300);
-    }
+    showModal(null);
 });

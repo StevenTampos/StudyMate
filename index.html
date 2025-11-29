@@ -86,8 +86,16 @@
                     <input type="date" id="task-deadline" class="input" required>
                 </div>
                 <div class="form-row" style="margin-top: 12px;">
-                    <label for="task-notes">Notes (optional)</label>
-                    <textarea id="task-notes" class="input" rows="3"></textarea>
+                    <label for="task-time">Due Time</label>
+                    <input type="time" id="task-time" class="input" value="23:59">
+                </div>
+                <div class="form-row" style="margin-top: 12px;">
+                    <label for="task-priority">Priority</label>
+                    <select id="task-priority" class="input" required>
+                        <option value="low">Low Priority</option>
+                        <option value="medium" selected>Medium Priority</option>
+                        <option value="high">High Priority</option>
+                    </select>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="add-btn" style="background: var(--muted);" onclick="closeTaskModal()">Cancel</button>
@@ -105,7 +113,7 @@
             // Filter tasks
             document.getElementById('filter-select').addEventListener('change', (e) => {
                 const filter = e.target.value;
-                renderTasks(filter);
+                renderDashboard(filter);
             });
         });
 
@@ -123,6 +131,31 @@
             if (e.target.id === 'task-modal') {
                 closeTaskModal();
             }
+        });
+
+        // Handle form submission
+        document.getElementById('task-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('task-title').value.trim();
+            const subject = document.getElementById('task-subject').value.trim();
+            const deadline = document.getElementById('task-deadline').value;
+            const time = document.getElementById('task-time').value;
+            const priority = document.getElementById('task-priority').value;
+
+            if (!title || !subject || !deadline) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            addTask({
+                title: title,
+                subject: subject,
+                due_date: deadline,
+                due_time: time,
+                priority: priority
+            });
+
+            closeTaskModal();
         });
     </script>
 </body>
