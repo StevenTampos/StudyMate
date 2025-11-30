@@ -3,8 +3,8 @@
 // ===========================================
 //  1. CONFIGURATION
 // ===========================================
-// CRITICAL: Ensure this path is correct for your XAMPP setup:
-const API_URL = "http://localhost/studymate/tasks.php"; 
+// CRITICAL: Ensure this path is correct for your XAMPP setup:// CORRECT (Relative path - works everywhere)
+const API_URL = "tasks.php";
 const TOKEN_KEY = "studymate_auth_token"; // Key for storing the auth token
 
 // ===========================================

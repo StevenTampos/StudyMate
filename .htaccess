@@ -1,0 +1,33 @@
+RewriteEngine On
+RewriteBase /
+
+# -----------------------------
+# 1) Force HTTPS
+# -----------------------------
+# Only redirect if not already HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# -----------------------------
+# 2) Stop directory listing
+# -----------------------------
+Options -Indexes
+
+# -----------------------------
+# 3) Protect sensitive files
+# -----------------------------
+<FilesMatch "(^\.|config\.php|\.env|composer\.(json|lock)|.*\.(bak|old|swp))">
+    Require all denied
+</FilesMatch>
+RedirectMatch 403 /\.git
+
+# -----------------------------
+# 4) Route everything else to index.php
+# -----------------------------
+# Skip if request is already for index.php
+RewriteCond %{REQUEST_URI} !^/index\.php$ [NC]
+# Skip if it’s a real file or directory
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Send to index.php
+RewriteRule ^ index.php [L,QSA]

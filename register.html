@@ -4,11 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>StudyMate — Register</title>
-    <!-- Use existing style sheet -->
     <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
     <style>
-        /* Reusing login container styles for consistent look */
-        .register-container {
+        /* Specific styles for auth pages */
+        .auth-container {
             max-width: 450px;
             margin: 50px auto;
             padding: 40px;
@@ -17,32 +17,22 @@
             box-shadow: var(--shadow);
             text-align: center;
         }
-        .register-container h1 { font-size: 2rem; margin-top: 0; color: var(--text-primary); }
-        .register-container p { color: var(--muted); margin-bottom: 25px; }
+        .auth-container h1 { font-size: 2rem; margin-top: 0; color: var(--text-primary); }
+        .auth-container p { color: var(--muted); margin-bottom: 25px; }
         .form-row { margin-bottom: 15px; text-align: left; }
         .form-row label { display: block; font-weight: 600; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px; }
         .form-row input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--input-text); }
         .primary-btn { background: var(--primary); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: background 0.2s; }
         .primary-btn:hover { background: var(--primary-dark); }
         .login-link { margin-top: 15px; font-size: 0.9rem; }
-        
-        /* Two-column layout for name and email/username */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        @media (max-width: 600px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
-<body>
-    <div class="register-container">
-        <h1>Create Your StudyMate Account</h1>
-        <p>Start managing your tasks and deadlines securely.</p>
+<body data-page="register">
+    <div class="auth-container">
+        <h1>Create Account</h1>
+        <p>Start managing your tasks and deadlines.</p>
         <form id="register-form">
             <div class="form-row">
                 <label for="fullName">Full Name</label>
@@ -70,7 +60,7 @@
             </div>
             
             <button type="submit" class="primary-btn">Register</button>
-            <p id="message-display" style="margin-top:15px; font-weight:600;"></p>
+            <p id="message-display" style="margin-top:15px; font-weight:600; min-height: 20px;"></p>
         </form>
         <div class="login-link">
             Already have an account? <a href="login.html">Log In</a>
@@ -78,7 +68,8 @@
     </div>
     
     <script>
-        const REGISTER_API_URL = "http://localhost/studymate/auth.php?action=register";
+        // Using relative path so it works even if you rename your project folder
+        const REGISTER_API_URL = "auth.php?action=register";
         
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -89,7 +80,8 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const messageEl = document.getElementById('message-display');
-            messageEl.textContent = ''; 
+            messageEl.textContent = 'Processing...'; 
+            messageEl.style.color = 'var(--text-secondary)';
 
             if (password !== confirmPassword) {
                 messageEl.textContent = 'Passwords do not match.';
@@ -107,22 +99,21 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    messageEl.textContent = data.message || 'Registration successful!';
+                    messageEl.textContent = 'Success! Redirecting to login...';
                     messageEl.style.color = 'var(--success)';
                     document.getElementById('register-form').reset();
                     
-                    // Optional: Redirect to login page after a delay
                     setTimeout(() => {
                         window.location.href = 'login.html';
-                    }, 2000);
+                    }, 1500);
                     
                 } else {
-                    // Display error message from the backend (e.g., username already exists)
-                    messageEl.textContent = data.error || data.message || 'Registration failed.';
+                    messageEl.textContent = data.error || 'Registration failed.';
                     messageEl.style.color = 'var(--danger)';
                 }
             } catch (error) {
-                messageEl.textContent = 'Network error or server is offline. Please check XAMPP.';
+                console.error(error);
+                messageEl.textContent = 'Server error. Ensure XAMPP is running.';
                 messageEl.style.color = 'var(--danger)';
             }
         });

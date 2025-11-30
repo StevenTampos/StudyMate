@@ -1,27 +1,23 @@
 <?php
-// auth.php - Authentication and User Profile API (COMPLETED and DEBUGGED)
+// auth.php - Authentication and User Profile API
 
-// --- ADD THESE THREE LINES FOR DEBUGGING ---
+// Debugging (Disable in production)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-// -------------------------------------------
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, PUT');
+header('Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Exit early for preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
 include 'db_connect.php'; 
 
-/**
- * Reliably retrieves the Authorization header.
- */
+// Helper: Get Authorization Header
 function getAuthorizationHeader(){
     if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
         return $_SERVER['HTTP_AUTHORIZATION'];
@@ -38,22 +34,18 @@ function getAuthorizationHeader(){
     return null;
 }
 
-/**
- * Generates a simple Base64-encoded token (JWT-like payload).
- */
+// Helper: Generate Token
 function generateToken($studentId) {
-    // Token expires in 24 hours (86400 seconds)
+    // Expires in 24 hours
     $expiration_time = time() + (24 * 3600); 
-    
     $payload = [
         'studentId' => $studentId,
         'exp' => $expiration_time
     ];
-    
     return base64_encode(json_encode($payload));
 }
 
-// --- TOKEN VALIDATION ---
+// Helper: Validate Token
 function validateTokenAndGetStudentId($pdo) {
     $token = getAuthorizationHeader();
     if (!$token || strpos($token, 'Bearer ') !== 0) {
@@ -64,23 +56,20 @@ function validateTokenAndGetStudentId($pdo) {
     $token_payload = base64_decode($token_base64); 
     $data = json_decode($token_payload, true);
 
-    // Check if token is valid AND not expired
     if ($data && isset($data['studentId']) && is_numeric($data['studentId']) && isset($data['exp']) && $data['exp'] > time()) {
         return $data['studentId'];
     }
     return null;
 }
-// ----------------------------------------------------------------------
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $_GET['action'] ?? null;
+
+// Determine student ID for protected routes
 $student_id = validateTokenAndGetStudentId($pdo);
 
-
-// --- ROUTER START ---
 switch ($action) {
-
     case 'register':
         if ($method === 'POST') {
             $fullName = $input['fullName'] ?? null;
@@ -156,14 +145,12 @@ switch ($action) {
         break;
 
     case 'profile':
-        // GET /auth.php?action=profile (Read current user details)
         if ($method === 'GET') {
             if (!$student_id) {
                 http_response_code(401);
-                die(json_encode(["error" => "Unauthorized: Invalid or missing token."]));
+                die(json_encode(["error" => "Unauthorized."]));
             }
             try {
-                // FIX: Use ONLY 'full_name' as per the registration schema
                 $sql = 'SELECT student_id, username, full_name, email FROM students WHERE student_id = ?'; 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$student_id]);
@@ -171,7 +158,7 @@ switch ($action) {
 
                 if (!$profile) {
                     http_response_code(404);
-                    die(json_encode(["error" => "Profile not found for ID: " . $student_id]));
+                    die(json_encode(["error" => "Profile not found."]));
                 }
                 echo json_encode($profile);
             } catch (\PDOException $e) {
@@ -179,11 +166,10 @@ switch ($action) {
                 die(json_encode(["error" => "Database error: " . $e->getMessage()]));
             }
         } 
-        // PUT /auth.php?action=profile (Update current user details)
         elseif ($method === 'PUT') {
             if (!$student_id) {
                 http_response_code(401);
-                die(json_encode(["error" => "Unauthorized: Invalid or missing token."]));
+                die(json_encode(["error" => "Unauthorized."]));
             }
 
             $name = $input['name'] ?? null;
@@ -204,7 +190,7 @@ switch ($action) {
                     http_response_code(409);
                     die(json_encode(["error" => "Username or email already exists."]));
                 }
-                // FIX: Use 'full_name' as the target column
+                
                 $sql = 'UPDATE students SET full_name = ?, username = ?, email = ? WHERE student_id = ?';
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$name, $username, $email, $student_id]);
@@ -214,7 +200,6 @@ switch ($action) {
                 http_response_code(500);
                 die(json_encode(["error" => "Database error: " . $e->getMessage()]));
             }
-
         } else {
              http_response_code(405);
              die(json_encode(["error" => "Method not allowed for profile action."]));

@@ -10,11 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// Assumes 'db_connect.php' is in the same directory
 include 'db_connect.php'; 
 
-// --- AUTHENTICATION LOGIC (Copied from tasks.php/auth.php) ---
-
+// --- AUTHENTICATION LOGIC ---
 function getAuthorizationHeader(){
     if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
         return $_SERVER['HTTP_AUTHORIZATION'];
@@ -44,32 +42,25 @@ if ($token && strpos($token, 'Bearer ') === 0) {
     }
 }
 
-// FALLBACK/SECURITY CHECK (similar to tasks.php)
+// --- SECURITY CHECK (FIXED) ---
+// We now strictly require a valid student_id. No fallbacks.
 if (!$student_id) {
-    if ($token) { 
-         // Fallback to student ID 1 for testing if a bad token is provided
-         $student_id = 1;
-    } else {
-        http_response_code(401);
-        die(json_encode(["error" => "Unauthorized: Please log in."]));
-    }
+    http_response_code(401);
+    die(json_encode(["error" => "Unauthorized: Please log in."]));
 }
-// ----------------------------------------------------
+// ------------------------------
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 
-// Get the expense ID from the URL (for DELETE)
 $uri_parts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 $expense_id = end($uri_parts);
 if (!is_numeric($expense_id) || $expense_id == 'budget.php') {
     $expense_id = null;
 }
 
-// Router
 switch ($method) {
     case 'GET':
-        // GET /budget.php - Get all expenses and allowance for student
         try {
             // 1. Get Allowance 
             $sql_allowance = "SELECT monthly_allowance FROM students WHERE student_id = ?";
@@ -95,7 +86,6 @@ switch ($method) {
         break;
 
     case 'POST':
-        // POST /budget.php - Add a new expense
         $amount = (float)($input['amount'] ?? 0);
         $category = $input['category'] ?? null;
         $description = $input['description'] ?? null;
@@ -127,7 +117,6 @@ switch ($method) {
         break;
         
     case 'DELETE':
-        // DELETE /budget.php/{id}
         if (!$expense_id) {
              http_response_code(400); echo json_encode(["error" => "Missing expense ID for delete"]); break;
         }
@@ -148,12 +137,10 @@ switch ($method) {
         break;
 
     case 'PUT':
-        // PUT /budget.php?action=allowance
         $action = $_GET['action'] ?? null;
         if ($action === 'allowance') {
             $new_allowance = (float)($input['allowance'] ?? 0);
             try {
-                // Update the monthly_allowance field in the students table
                 $sql = "UPDATE students SET monthly_allowance = ? WHERE student_id = ?";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$new_allowance, $student_id]);
