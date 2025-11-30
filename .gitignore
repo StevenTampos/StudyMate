@@ -1,0 +1,7 @@
+# Environment files
+.env
+
+# Sensitive PHP files
+db_connect.php
+
+# Composer vendor folder
