@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>StudyMate — Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <script src="theme.js"></script>
+    <script src="theme.js" defer></script>
 </head>
 
 <body data-page="dashboard">
@@ -22,141 +23,56 @@
 
     <section class="hero">
         <h1>Welcome to StudyMate</h1>
-        <p>Your academic companion</p>
+        <p>Your Student Productivity Hub</p>
     </section>
 
     <div class="container">
-        <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-number" id="total-tasks">0</div>
                 <div class="stat-label">Total Tasks</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="pending-tasks">0</div>
-                <div class="stat-label">Pending</div>
-            </div>
-            <div class="stat-card">
                 <div class="stat-number" id="completed-tasks">0</div>
                 <div class="stat-label">Completed</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="subjects-count">0</div>
-                <div class="stat-label">Subjects</div>
+                <div class="stat-number" id="pending-tasks">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="overdue-tasks">0</div>
+                <div class="stat-label">Overdue</div>
             </div>
         </div>
 
-        <!-- Tasks Card -->
         <div class="card">
             <div class="section-header">
-                <div class="section-title">My Tasks</div>
+                <div class="section-title">Task Dashboard</div>
                 <div class="controls">
-                    <select id="filter-select" class="select">
-                        <option value="all">All Tasks</option>
-                        <option value="pending">Pending</option>
-                        <option value="completed">Completed</option>
+                    <select id="subject-filter" class="select" onchange="renderDashboard(this.value)">
+                        <option value="all">All Subjects</option>
                     </select>
-                    <button class="add-btn" onclick="openTaskModal()">+ Add Task</button>
+                    <button class="add-btn open-add">+ Add New Task</button>
                 </div>
             </div>
 
-            <div id="tasks-list" class="task-list">
-                <div class="empty">No tasks yet. Click "Add Task" to create one!</div>
+            <div id="task-list" class="task-list">
+                <div class="empty">Loading tasks...</div>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal for adding/editing tasks -->
-    <div id="task-modal" class="modal-backdrop" style="display: none;">
-        <div class="modal">
-            <h2 style="margin-top: 0;">Add New Task</h2>
-            <form id="task-form">
-                <div class="form-grid">
-                    <div class="form-row">
-                        <label for="task-title">Task Title</label>
-                        <input type="text" id="task-title" class="input" required>
-                    </div>
-                    <div class="form-row">
-                        <label for="task-subject">Subject</label>
-                        <input type="text" id="task-subject" class="input" required>
-                    </div>
-                </div>
-                <div class="form-row" style="margin-top: 12px;">
-                    <label for="task-deadline">Deadline</label>
-                    <input type="date" id="task-deadline" class="input" required>
-                </div>
-                <div class="form-row" style="margin-top: 12px;">
-                    <label for="task-time">Due Time</label>
-                    <input type="time" id="task-time" class="input" value="23:59">
-                </div>
-                <div class="form-row" style="margin-top: 12px;">
-                    <label for="task-priority">Priority</label>
-                    <select id="task-priority" class="input" required>
-                        <option value="low">Low Priority</option>
-                        <option value="medium" selected>Medium Priority</option>
-                        <option value="high">High Priority</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="add-btn" style="background: var(--muted);" onclick="closeTaskModal()">Cancel</button>
-                    <button type="submit" class="add-btn">Save Task</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <script src="app.js"></script>
     <script>
+        // initial render on dashboard
         document.addEventListener("DOMContentLoaded", () => {
-            renderDashboard();
-            
-            // Filter tasks
-            document.getElementById('filter-select').addEventListener('change', (e) => {
-                const filter = e.target.value;
-                renderDashboard(filter);
-            });
-        });
-
-        function openTaskModal() {
-            document.getElementById('task-modal').style.display = 'flex';
-        }
-
-        function closeTaskModal() {
-            document.getElementById('task-modal').style.display = 'none';
-            document.getElementById('task-form').reset();
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('task-modal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'task-modal') {
-                closeTaskModal();
-            }
-        });
-
-        // Handle form submission
-        document.getElementById('task-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const title = document.getElementById('task-title').value.trim();
-            const subject = document.getElementById('task-subject').value.trim();
-            const deadline = document.getElementById('task-deadline').value;
-            const time = document.getElementById('task-time').value;
-            const priority = document.getElementById('task-priority').value;
-
-            if (!title || !subject || !deadline) {
-                alert('Please fill in all required fields');
-                return;
-            }
-
-            addTask({
-                title: title,
-                subject: subject,
-                due_date: deadline,
-                due_time: time,
-                priority: priority
-            });
-
-            closeTaskModal();
+            renderDashboard("all");
+            // hook subject filter element to refresh on change
+            const subj = document.querySelector("#subject-filter");
+            if (subj) subj.addEventListener("change", (e) => renderDashboard(e.target.value));
         });
     </script>
 </body>
+
 </html>

@@ -1,7 +1,131 @@
-/* style.css - shared styles for StudyMate */
-
-/* Light theme (default) */
+/* style.css - shared styles for StudyMate (Canva-like UI) */
 :root {
+    /* Light theme (default) */
+    --bg: #ffffff;
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --primary: #4a6bff;
+    --primary-dark: #3a56cc;
+    --border-color: #e0e0e0;
+    --card-bg: #ffffff;
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --input-bg: #f8f9fa;
+    --input-border: #ced4da;
+    --input-text: #333333;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] {
+    --bg: #121212;
+    --bg-color: #121212;
+    --text-color: #f5f5f5;
+    --card-bg: #1e1e1e;
+    --border-color: #333333;
+    --input-bg: #2d2d2d;
+    --input-border: #444444;
+    --input-text: #f5f5f5;
+}
+
+/* Base styles */
+html, body {
+    background: var(--bg);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Toggle Styles */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    padding: 8px 12px;
+    background: var(--card-bg);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background: var(--input-bg);
+}
+
+.theme-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle input:checked + .toggle-slider {
+    background-color: var(--primary);
+}
+
+.toggle-slider:before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.toggle-icons {
+    display: flex;
+    gap: 5px;
+    font-size: 14px;
+}
+
+.moon-icon {
+    opacity: 0.5;
+}
+
+.theme-toggle input:checked ~ .toggle-icons .sun-icon {
+    opacity: 0.5;
+}
+
+.theme-toggle input:checked ~ .toggle-icons .moon-icon {
+    opacity: 1;
+}
+
+.theme-toggle input:not(:checked) ~ .toggle-icons .sun-icon {
+    opacity: 1;
+}
+
+input:checked + .slider:before {
+    content: "🌙";
+    transform: translateX(30px);
+}
+
+#themeLabel {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 40px;
+}
+
+:root {
+    /* Light theme (default) */
     --primary: #3182ce;
     --primary-dark: #2c5aa0;
     --bg: #ffffff;
@@ -17,7 +141,7 @@
     --card-radius: 14px;
     --shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
     --border-color: #e2e8f0;
-    --input-bg: #f8fafc;
+    --input-bg: #fff;
     --input-border: #cbd5e0;
     --input-text: #2d3748;
     --header-bg: #fff;
@@ -27,8 +151,6 @@
 
 /* Dark theme */
 [data-theme="dark"] {
-    --primary: #63b3ed;
-    --primary-dark: #4299e1;
     --bg: #1a202c;
     --bg-secondary: #2d3748;
     --text-primary: #f7fafc;
@@ -46,16 +168,14 @@
     --header-text: #f7fafc;
 }
 
-/* Base styles */
 * {
-    box-sizing: border-box;
+    box-sizing: border-box
 }
 
 html,
 body {
     height: 100%;
     margin: 0;
-    padding: 0;
     background: var(--bg);
     color: var(--text-primary);
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -84,37 +204,30 @@ a:hover {
     top: 0;
     z-index: 40;
     color: var(--header-text);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .brand {
     font-weight: 700;
     color: var(--primary);
-    font-size: 1.35rem;
+    font-size: 1.35rem
 }
 
 .nav-links {
     display: flex;
     gap: 18px;
-    align-items: center;
+    align-items: center
 }
 
 .nav-links a {
     padding: 8px 12px;
     border-radius: 8px;
-    color: var(--text-secondary);
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-
-.nav-links a:hover {
-    background: var(--input-bg);
-    color: var(--primary);
+    color: #475569;
+    font-weight: 600
 }
 
 .nav-links a.active {
     background: var(--primary);
-    color: #fff;
+    color: #fff
 }
 
 /* HERO */
@@ -123,23 +236,24 @@ a:hover {
     color: white;
     padding: 44px 28px;
     text-align: center;
+    margin-top: 8px;
 }
 
 .hero h1 {
     font-size: 2.3rem;
-    margin: 0 0 8px;
+    margin: 0 0 8px
 }
 
 .hero p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85)
 }
 
+/* container */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    min-height: 80vh;
+    max-width: 1180px;
+    margin: 40px auto;
+    padding: 0 18px
 }
 
 /* stat cards */
@@ -147,7 +261,7 @@ a:hover {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 18px;
-    margin: -24px 0 18px;
+    margin: -24px 0 18px
 }
 
 .stat-card {
@@ -155,51 +269,39 @@ a:hover {
     padding: 18px;
     border-radius: 14px;
     box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(15, 23, 42, 0.03)
 }
 
 .stat-number {
     font-size: 1.6rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary)
 }
 
 .stat-label {
     color: var(--muted);
-    margin-top: 6px;
+    margin-top: 6px
 }
 
 /* main card */
 .card {
     background: var(--card-bg);
-    padding: 24px;
+    padding: 18px;
     border-radius: 14px;
     box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-.card h2 {
-    color: var(--text-primary);
+    border: 1px solid rgba(15, 23, 42, 0.03)
 }
 
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 12px
 }
 
 .section-title {
     font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-weight: 700
 }
 
 .add-btn {
@@ -209,13 +311,11 @@ a:hover {
     border-radius: 10px;
     border: none;
     cursor: pointer;
-    font-weight: 600;
-    transition: all 0.25s ease;
+    font-weight: 600
 }
 
 .add-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.05);
+    background: var(--primary-dark)
 }
 
 /* task list */
@@ -223,7 +323,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 6px;
+    margin-top: 6px
 }
 
 .task-item {
@@ -232,31 +332,25 @@ a:hover {
     gap: 12px;
     padding: 14px;
     border-radius: 12px;
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
-    transition: all 0.2s ease;
-}
-
-.task-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.03)
 }
 
 .task-item.completed {
-    background: var(--success);
-    opacity: 0.7;
+    background: #f0fff4;
+    border-color: rgba(72, 187, 120, 0.25);
+    opacity: 0.9
 }
 
 .task-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 12px
 }
 
 .task-title {
     font-weight: 700;
-    font-size: 1rem;
-    color: var(--text-primary);
+    font-size: 1rem
 }
 
 .task-meta {
@@ -264,7 +358,7 @@ a:hover {
     gap: 10px;
     color: var(--muted);
     font-size: 0.86rem;
-    margin-top: 6px;
+    margin-top: 6px
 }
 
 .task-subject {
@@ -273,14 +367,14 @@ a:hover {
     padding: 6px 10px;
     border-radius: 999px;
     font-weight: 600;
-    font-size: 0.78rem;
+    font-size: 0.78rem
 }
 
 .task-actions {
     margin-left: auto;
     display: flex;
     gap: 8px;
-    align-items: center;
+    align-items: center
 }
 
 /* small buttons */
@@ -290,115 +384,89 @@ a:hover {
     padding: 8px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.25s ease;
-}
-
-.icon-btn:hover {
-    transform: scale(1.05);
+    font-size: 1rem
 }
 
 .complete-btn {
     background: var(--success);
-    color: #fff;
+    color: #fff
 }
 
 .delete-btn {
     background: var(--danger);
-    color: #fff;
+    color: #fff
 }
 
 /* empty state */
 .empty {
     padding: 28px;
     text-align: center;
-    color: var(--muted);
+    color: var(--muted)
 }
 
 /* modal */
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(11, 15, 22, 0.5);
+    background: rgba(11, 15, 22, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 60;
-    animation: fadeIn 0.3s ease;
+    z-index: 60
 }
 
 .modal {
     width: 680px;
     max-width: 94%;
     background: var(--card-bg);
-    padding: 24px;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    animation: popupScale 0.3s ease;
+    padding: 18px;
+    border-radius: 12px
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin-top: 8px;
+    margin-top: 8px
 }
 
 .form-row {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 6px
 }
 
 .form-row label {
     font-size: 0.86rem;
-    color: var(--text-secondary);
-    font-weight: 600;
+    color: #475569
 }
 
 .input,
-input,
-select,
-textarea {
-    padding: 10px 12px;
+select {
+    padding: 10px;
     border-radius: 8px;
-    border: 1px solid var(--input-border);
-    font-size: 0.98rem;
-    background: var(--input-bg);
-    color: var(--input-text);
-    transition: all 0.2s ease;
-}
-
-.input:focus,
-input:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+    border: 1px solid #e6eef6;
+    font-size: 0.98rem
 }
 
 .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 12px
 }
 
 /* filter */
 .controls {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: center
 }
 
 .select {
-    padding: 8px 12px;
+    padding: 8px;
     border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--input-bg);
-    color: var(--input-text);
-    cursor: pointer;
+    border: 1px solid #e6eef6
 }
 
 /* deadlines page styles */
@@ -408,39 +476,74 @@ textarea:focus {
     align-items: center;
     padding: 12px;
     border-radius: 10px;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.03)
 }
 
 .deadline-item.overdue {
     border-left: 6px solid var(--danger);
-    background: rgba(245, 101, 101, 0.1);
+    background: #fff6f6
 }
 
 /* subjects progress */
 .progress {
     height: 10px;
-    background: var(--input-bg);
+    background: #f2f6fb;
     border-radius: 999px;
-    overflow: hidden;
+    overflow: hidden
 }
 
 .progress-bar {
     height: 100%;
-    background: var(--primary);
-    transition: width 0.3s ease;
+    background: var(--primary)
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
+/* responsive */
+@media (max-width:800px) {
+    .form-grid {
+        grid-template-columns: 1fr
     }
-    to {
-        opacity: 1;
+
+    .controls {
+        flex-direction: column;
+        align-items: stretch
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px
     }
 }
 
+/* === ANIMATION ADD-ONS FOR STUDYMATE === */
+
+/* 1️⃣ Smooth hover animations for buttons */
+.add-btn,
+.icon-btn {
+    transition: all 0.25s ease;
+    transform: scale(1);
+}
+
+.add-btn:hover,
+.icon-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+}
+
+/* 2️⃣ Card hover lift effect */
+.stat-card,
+.card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stat-card:hover,
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(17, 24, 39, 0.1);
+}
+
+/* 3️⃣ Task item subtle fade and slide-in */
 @keyframes fadeSlideIn {
     from {
         opacity: 0;
@@ -452,10 +555,12 @@ textarea:focus {
     }
 }
 
+
+/* 4️⃣ Modal pop-up animation */
 @keyframes popupScale {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.85);
     }
     to {
         opacity: 1;
@@ -463,9 +568,19 @@ textarea:focus {
     }
 }
 
-/* Navigation hover underline animation */
+.modal-backdrop {
+    animation: fadeSlideIn 0.3s ease both;
+}
+
+.modal {
+    animation: popupScale 0.3s ease both;
+    transition: transform 0.2s ease;
+}
+
+/* 5️⃣ Navigation hover underline animation */
 .nav-links a {
     position: relative;
+    transition: color 0.25s ease;
 }
 
 .nav-links a::after {
@@ -483,29 +598,24 @@ textarea:focus {
     width: 100%;
 }
 
-.nav-links a.active::after {
-    width: 0;
+/* 6️⃣ Smooth transitions when switching pages or elements */
+body {
+    transition: background 0.4s ease, color 0.4s ease;
 }
 
-/* responsive */
-@media (max-width: 800px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
+/* Add this to your existing styles */
+.expense-form {
+    margin-bottom: 40px; /* Already set, but keeping it for reference */
+}
 
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
+/* Add this new rule to create more space after the form */
+#expense-form + .card {
+    margin-top: 30px;
+}
 
-    .section-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
-    
-    .nav-links {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
+/* Or if the expense history is in a different structure, you can use: */
+.expense-history-section {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
 }

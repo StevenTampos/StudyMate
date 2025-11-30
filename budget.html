@@ -5,208 +5,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Finance Management - StudyMate</title>
     <link rel="stylesheet" href="style.css">
-    <script src="theme.js"></script>
+    <script src="theme.js" defer></script>
     <style>
-        .finance-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
         .finance-summary {
             background: var(--card-bg);
-            border-radius: 14px;
-            padding: 24px;
+            border-radius: 14px; /* Slightly larger radius */
+            padding: 25px;
             box-shadow: var(--shadow);
             margin-bottom: 40px;
             border: 1px solid var(--border-color);
         }
         .finance-summary h2 {
+            font-size: 1.5rem;
             color: var(--text-primary);
             margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
         }
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         .summary-item {
             text-align: center;
-            padding: 20px;
-            border-radius: 12px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease;
+            padding: 20px 10px;
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            transition: all 0.2s ease;
         }
         .summary-item:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
         }
         .summary-item h3 {
             margin: 0 0 8px;
-            font-size: 14px;
-            color: var(--text-secondary);
+            font-size: 0.85rem;
+            color: var(--muted);
             font-weight: 600;
         }
         .summary-item p {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-size: 1.8rem;
+            font-weight: 800;
         }
-        .summary-item.balance {
-            background: var(--primary);
-            border-color: var(--primary);
+        /* Highlight remaining balance */
+        #balance-card {
+            background: var(--primary); 
+            color: white;
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.4);
         }
-        .summary-item.balance h3,
-        .summary-item.balance p {
+        #balance-card p {
             color: white;
         }
+        #balance-card h3 {
+             color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* === FORM STYLES (ENHANCED) === */
         .expense-form {
             display: grid;
-            gap: 16px;
+            gap: 20px;
+            margin-bottom: 40px;
         }
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            gap: 20px;
         }
         .form-group label {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 14px;
+             font-weight: 600;
+             margin-bottom: 6px;
+             display: block;
+             font-size: 0.95rem;
+             color: var(--text-secondary);
         }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--input-text);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+            outline: none;
+        }
+        
         .form-actions {
             display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 8px;
+            justify-content: space-between; /* Space out the two buttons */
+            gap: 20px;
+            margin-top: 15px;
         }
-        .btn {
-            padding: 10px 20px;
+        .form-actions button {
+            padding: 12px 20px;
             border-radius: 8px;
-            border: none;
-            cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
+            cursor: pointer;
             transition: all 0.2s ease;
-            background: var(--input-bg);
+        }
+        #set-allowance-btn {
+            background: var(--bg-secondary);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
+            flex-grow: 1;
         }
-        .btn:hover {
+        #set-allowance-btn:hover {
+            background: var(--input-bg);
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .btn.primary {
+        .add-expense-btn {
             background: var(--primary);
             color: white;
-            border-color: var(--primary);
+            border: none;
+            flex-grow: 2; /* Make add expense button wider */
         }
-        .btn.primary:hover {
+        .add-expense-btn:hover {
             background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        /* === EXPENSE HISTORY STYLES (ENHANCED LIST) === */
+        .expense-history-card {
+            margin-top: 40px;
         }
         .expense-list {
-            margin-top: 20px;
+            padding-top: 10px;
         }
         .expense-item {
             display: flex;
             justify-content: space-between;
-            padding: 16px;
+            padding: 15px 0;
             border-bottom: 1px solid var(--border-color);
             align-items: center;
-            background: var(--card-bg);
-            margin-bottom: 8px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: background-color 0.2s ease;
+        }
+        .expense-item:last-child {
+            border-bottom: none;
         }
         .expense-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            margin: 0 -15px;
+            border-radius: 8px;
+            border-color: transparent;
         }
         .expense-details {
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .expense-title {
+            font-weight: 700;
+            font-size: 1.1rem;
             color: var(--text-primary);
         }
-        .expense-details > div {
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .expense-details small {
-            color: var(--text-secondary);
-            font-size: 13px;
+        .expense-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 4px;
         }
         .expense-amount {
             font-weight: 700;
-            font-size: 18px;
-            margin-left: 15px;
-            color: var(--text-primary);
+            font-size: 1.2rem;
+            color: var(--danger);
+            margin-left: 20px;
+            white-space: nowrap;
         }
         .expense-category {
-            font-size: 12px;
-            color: var(--text-primary);
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
+            font-size: 11px;
+            color: var(--primary);
+            background: rgba(49, 130, 206, 0.1);
+            padding: 4px 10px;
             border-radius: 12px;
-            display: inline-block;
-            margin-top: 6px;
-            margin-right: 8px;
             font-weight: 600;
+            display: inline-block;
         }
         .delete-btn {
             color: var(--danger);
             background: none;
             border: none;
             cursor: pointer;
-            padding: 8px 12px;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 6px;
             margin-left: 10px;
             transition: all 0.2s ease;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 6px;
         }
         .delete-btn:hover {
             background: var(--danger);
             color: white;
         }
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--muted);
-            font-size: 16px;
-        }
-        input, select {
-            background: var(--input-bg);
-            color: var(--input-text);
-            border: 1px solid var(--input-border);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            font-family: inherit;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
-        }
-        select {
-            cursor: pointer;
-        }
-        @media (max-width: 768px) {
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
             .summary-grid {
                 grid-template-columns: 1fr;
             }
             .form-row {
                 grid-template-columns: 1fr;
+            }
+            .form-actions {
+                flex-direction: column;
+            }
+            .form-actions button {
+                flex-grow: 1;
             }
         }
     </style>
@@ -240,7 +250,7 @@
                     <h3>Total Expenses</h3>
                     <p id="total-expenses">₱0.00</p>
                 </div>
-                <div class="summary-item balance">
+                <div class="summary-item" id="balance-card">
                     <h3>Remaining Balance</h3>
                     <p id="balance">₱0.00</p>
                 </div>
@@ -248,7 +258,7 @@
         </div>
 
         <div class="card">
-            <h2 style="margin-top: 0;">Add New Expense</h2>
+            <h2>Add New Expense</h2>
             <form id="expense-form" class="expense-form">
                 <div class="form-row">
                     <div class="form-group">
@@ -268,7 +278,8 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
+                <!-- Description spanning full width -->
+                <div class="form-group" style="grid-column: 1 / -1;">
                     <label for="expense-description">Description</label>
                     <input type="text" id="expense-description" placeholder="What was this expense for?" required>
                 </div>
@@ -276,199 +287,277 @@
                     <label for="expense-date">Date</label>
                     <input type="date" id="expense-date" required>
                 </div>
+                <!-- Placeholder group to fill the grid slot beside Date -->
+                <div class="form-group"></div>
+
                 <div class="form-actions">
                     <button type="button" class="btn" id="set-allowance-btn">Set Monthly Allowance</button>
-                    <button type="submit" class="btn primary">Add Expense</button>
+                    <button type="submit" class="add-expense-btn">Add Expense</button>
                 </div>
             </form>
         </div>
 
-        <div style="margin-top: 40px;">
-            <div class="card">
-                <div class="section-header">
-                    <h2 style="margin: 0;">Expense History</h2>
-                    <div class="controls">
-                        <select id="month-filter" class="select">
-                            <option value="all">All Months</option>
-                        </select>
-                    </div>
+        <div class="card expense-history-card">
+            <div class="section-header">
+                <h2>Expense History</h2>
+                <div class="controls">
+                    <select id="month-filter" class="select">
+                        <option value="all">All Months</option>
+                        <!-- Will be populated by JavaScript -->
+                    </select>
                 </div>
-                <div id="expense-list" class="expense-list">
-                    <p class="empty-state">No expenses recorded yet. Add your first expense above!</p>
-                </div>
+            </div>
+            <div id="expense-list" class="expense-list">
+                <!-- Expenses will be added here by JavaScript -->
+                <p class="empty-state">No expenses recorded yet. Add your first expense above!</p>
             </div>
         </div>
         
         <div style="margin-bottom: 40px;"></div>
     </div>
 
+    <script src="app.js"></script>
     <script>
-        // Finance Management Logic
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize variables
-            let monthlyAllowance = parseFloat(localStorage.getItem('monthlyAllowance')) || 0;
-            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+    // Finance Management Logic (Rewritten for API)
+    // NOTE: This entire script section is retained as it handles the core API logic.
+    document.addEventListener('DOMContentLoaded', () => {
+        const BUDGET_API_URL = "http://localhost/studymate/budget.php";
+        const TOKEN_KEY = "studymate_auth_token";
+        
+        // DOM Elements
+        const expenseForm = document.getElementById('expense-form');
+        const expenseList = document.getElementById('expense-list');
+        const monthlyAllowanceEl = document.getElementById('monthly-allowance');
+        const totalExpensesEl = document.getElementById('total-expenses');
+        const balanceEl = document.getElementById('balance');
+        const setAllowanceBtn = document.getElementById('set-allowance-btn');
+        const monthFilter = document.getElementById('month-filter');
+
+        let allExpenses = [];
+        let monthlyAllowance = 0;
+        
+        // Set current date as default
+        document.getElementById('expense-date').valueAsDate = new Date();
+
+        // Event Listeners
+        expenseForm.addEventListener('submit', handleAddExpense);
+        setAllowanceBtn.addEventListener('click', setMonthlyAllowance);
+        monthFilter.addEventListener('change', filterExpensesByMonth);
+
+        // --- API HELPERS ---
+        async function sendApiRequest(url, method, body = null) {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) { window.location.href = 'login.html'; return; }
             
-            // DOM Elements
-            const expenseForm = document.getElementById('expense-form');
-            const expenseList = document.getElementById('expense-list');
-            const monthlyAllowanceEl = document.getElementById('monthly-allowance');
-            const totalExpensesEl = document.getElementById('total-expenses');
-            const balanceEl = document.getElementById('balance');
-            const setAllowanceBtn = document.getElementById('set-allowance-btn');
-            const monthFilter = document.getElementById('month-filter');
-
-            // Set current date as default
-            document.getElementById('expense-date').valueAsDate = new Date();
-
-            // Populate month filter
-            populateMonthFilter();
-
-            // Update UI
-            updateUI();
-
-            // Event Listeners
-            expenseForm.addEventListener('submit', handleAddExpense);
-            setAllowanceBtn.addEventListener('click', setMonthlyAllowance);
-            monthFilter.addEventListener('change', filterExpensesByMonth);
-
-            // Functions
-            function updateUI() {
-                // Update summary
-                monthlyAllowanceEl.textContent = `₱${monthlyAllowance.toFixed(2)}`;
-                
-                const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
-                totalExpensesEl.textContent = `₱${totalExpenses.toFixed(2)}`;
-                
-                const balance = monthlyAllowance - totalExpenses;
-                balanceEl.textContent = `₱${balance.toFixed(2)}`;
-                
-                // Update list
-                renderExpenses(expenses);
+            const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+            const options = { method, headers };
+            if (body) {
+                options.body = JSON.stringify(body);
             }
+            
+            const response = await fetch(url, options);
 
-            function handleAddExpense(e) {
-                e.preventDefault();
+            if (response.status === 401) {
+                // Use the global logout function if available (or redirect)
+                if (typeof logout === 'function') logout(); else window.location.href = 'login.html';
+                throw new Error("Unauthorized");
+            }
+            if (!response.ok && response.status !== 204) {
+                const errorData = await response.json().catch(() => ({ error: response.statusText }));
+                throw new Error(errorData.error || `API Request Failed with status ${response.status}`);
+            }
+            return response;
+        }
+
+        async function fetchBudget() {
+            try {
+                const response = await sendApiRequest(BUDGET_API_URL, 'GET');
+                const data = await response.json();
                 
-                const amount = parseFloat(document.getElementById('expense-amount').value);
-                const category = document.getElementById('expense-category').value;
-                const description = document.getElementById('expense-description').value;
-                const date = document.getElementById('expense-date').value;
-                
-                if (!amount || !category || !description || !date) {
-                    alert('Please fill in all fields');
-                    return;
-                }
-                
-                const newExpense = {
-                    id: Date.now(),
+                allExpenses = data.expenses || [];
+                monthlyAllowance = data.allowance || 0;
+
+                updateUI();
+                populateMonthFilter();
+
+            } catch (e) {
+                console.error("Failed to fetch budget data:", e);
+                // Display error message
+                expenseList.innerHTML = `<p class="empty-state" style="color:var(--danger)">Error loading budget: ${e.message}</p>`;
+            }
+        }
+        
+        // --- UI & LOGIC FUNCTIONS ---
+
+        function updateUI() {
+            // Calculate totals based on ALL fetched expenses
+            const totalExpenses = allExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+            const balance = monthlyAllowance - totalExpenses;
+            
+            // Update summary
+            monthlyAllowanceEl.textContent = `₱${monthlyAllowance.toFixed(2)}`;
+            totalExpensesEl.textContent = `₱${totalExpenses.toFixed(2)}`;
+            balanceEl.textContent = `₱${balance.toFixed(2)}`;
+
+            // Apply current month filter
+            filterExpensesByMonth(); 
+        }
+
+        async function handleAddExpense(e) {
+            e.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            const category = document.getElementById('expense-category').value;
+            const description = document.getElementById('expense-description').value;
+            const date = document.getElementById('expense-date').value;
+            
+            if (!amount || !category || !description || !date) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            try {
+                await sendApiRequest(BUDGET_API_URL, 'POST', {
                     amount,
                     category,
                     description,
                     date
-                };
+                });
                 
-                expenses.push(newExpense);
-                saveExpenses();
-                updateUI();
                 expenseForm.reset();
                 document.getElementById('expense-date').valueAsDate = new Date();
+                await fetchBudget(); // Re-fetch all data to refresh
+                
+            } catch (e) {
+                alert("Error adding expense: " + e.message);
             }
+        }
 
-            function renderExpenses(expensesToRender) {
-                if (expensesToRender.length === 0) {
-                    expenseList.innerHTML = '<p class="empty-state">No expenses recorded yet. Add your first expense above!</p>';
-                    return;
-                }
-                
-                expenseList.innerHTML = '';
-                
-                // Sort by date (most recent first)
-                const sortedExpenses = [...expensesToRender].sort((a, b) => 
-                    new Date(b.date) - new Date(a.date)
-                );
-                
-                sortedExpenses.forEach(expense => {
-                    const expenseEl = document.createElement('div');
-                    expenseEl.className = 'expense-item';
-                    expenseEl.innerHTML = `
-                        <div class="expense-details">
-                            <div>${expense.description}</div>
+        function renderExpenses(expensesToRender) {
+            if (expensesToRender.length === 0) {
+                expenseList.innerHTML = '<p class="empty-state">No expenses found for the selected month.</p>';
+                return;
+            }
+            
+            expenseList.innerHTML = '';
+            
+            expensesToRender.forEach(expense => {
+                const expenseEl = document.createElement('div');
+                expenseEl.className = 'expense-item';
+                expenseEl.innerHTML = `
+                    <div class="expense-details">
+                        <div class="expense-title">${expense.description}</div>
+                        <div class="expense-meta">
                             <span class="expense-category">${formatCategory(expense.category)}</span>
                             <small>${formatDate(expense.date)}</small>
                         </div>
-                        <div class="expense-amount">₱${parseFloat(expense.amount).toFixed(2)}</div>
-                        <button class="delete-btn" onclick="deleteExpense(${expense.id})">×</button>
-                    `;
-                    expenseList.appendChild(expenseEl);
-                });
-            }
+                    </div>
+                    <div class="expense-amount">₱${parseFloat(expense.amount).toFixed(2)}</div>
+                    <button class="delete-btn" onclick="deleteExpense(${expense.id})">×</button>
+                `;
+                expenseList.appendChild(expenseEl);
+            });
+        }
 
-            function setMonthlyAllowance() {
-                const newAllowance = prompt('Enter your monthly allowance (₱):', monthlyAllowance || '');
-                if (newAllowance !== null && newAllowance !== '') {
-                    const amount = parseFloat(newAllowance);
-                    if (!isNaN(amount) && amount >= 0) {
-                        monthlyAllowance = amount;
-                        localStorage.setItem('monthlyAllowance', monthlyAllowance);
-                        updateUI();
-                    } else {
-                        alert('Please enter a valid amount');
-                    }
+        async function setMonthlyAllowance() {
+            const newAllowanceStr = prompt('Enter your monthly allowance (₱):', monthlyAllowance || '');
+            if (newAllowanceStr === null) return;
+
+            const newAllowance = parseFloat(newAllowanceStr) || 0;
+            
+            try {
+                await sendApiRequest(`${BUDGET_API_URL}?action=allowance`, 'PUT', { allowance: newAllowance });
+                monthlyAllowance = newAllowance; // Update local state
+                updateUI();
+                alert("Allowance updated!");
+            } catch (e) {
+                alert("Error setting allowance: " + e.message);
+            }
+        }
+
+        // Made global to work with inline onclick in renderExpenses
+        window.deleteExpense = async function(id) {
+            if (!confirm('Are you sure you want to delete this expense?')) return;
+            
+            try {
+                await sendApiRequest(`${BUDGET_API_URL}/${id}`, 'DELETE');
+                await fetchBudget(); // Re-fetch data to refresh
+            } catch (e) {
+                alert("Error deleting expense: " + e.message);
+            }
+        }
+
+        function filterExpensesByMonth() {
+            const selectedMonth = monthFilter.value;
+            const currentYear = new Date().getFullYear();
+
+            if (selectedMonth === 'all') {
+                renderExpenses(allExpenses);
+                return;
+            }
+            
+            const filtered = allExpenses.filter(expense => {
+                // Ensure date is treated as UTC to prevent timezone shifts changing the day
+                const expenseDate = new Date(expense.date + 'T00:00:00');
+                return expenseDate.getMonth() === parseInt(selectedMonth) && 
+                       expenseDate.getFullYear() === currentYear;
+            });
+            
+            renderExpenses(filtered);
+        }
+
+        function populateMonthFilter() {
+            // Get unique month/year combinations from expenses for filter options
+            const monthSet = new Set();
+            const today = new Date();
+            const currentYear = today.getFullYear();
+
+            allExpenses.forEach(expense => {
+                const expenseDate = new Date(expense.date + 'T00:00:00');
+                if (expenseDate.getFullYear() === currentYear) {
+                    monthSet.add(expenseDate.getMonth());
                 }
+            });
+            
+            // Build the filter options
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            monthFilter.innerHTML = '<option value="all">All Months</option>';
+            
+            Array.from(monthSet).sort((a, b) => a - b).forEach(monthIndex => {
+                const option = document.createElement('option');
+                option.value = monthIndex;
+                option.textContent = months[monthIndex];
+                monthFilter.appendChild(option);
+            });
+            
+            // Try to default to the current month if available
+            const currentMonthIndex = today.getMonth();
+            if (monthSet.has(currentMonthIndex)) {
+                monthFilter.value = currentMonthIndex;
+            } else {
+                monthFilter.value = 'all';
             }
+        }
 
-            window.deleteExpense = function(id) {
-                if (confirm('Are you sure you want to delete this expense?')) {
-                    expenses = expenses.filter(exp => exp.id !== id);
-                    saveExpenses();
-                    updateUI();
-                }
-            };
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            // Use 'T00:00:00' to ensure Date object is created at start of day in local timezone
+            return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', options);
+        }
 
-            function saveExpenses() {
-                localStorage.setItem('expenses', JSON.stringify(expenses));
-            }
-
-            function filterExpensesByMonth() {
-                const selectedMonth = monthFilter.value;
-                if (selectedMonth === 'all') {
-                    renderExpenses(expenses);
-                    return;
-                }
-                
-                const filtered = expenses.filter(expense => {
-                    const expenseDate = new Date(expense.date);
-                    return expenseDate.getMonth() === parseInt(selectedMonth) && 
-                           expenseDate.getFullYear() === new Date().getFullYear();
-                });
-                
-                renderExpenses(filtered);
-            }
-
-            function populateMonthFilter() {
-                const months = [
-                    'January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'
-                ];
-                
-                months.forEach((month, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = month;
-                    monthFilter.appendChild(option);
-                });
-            }
-
-            function formatDate(dateString) {
-                const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                return new Date(dateString).toLocaleDateString('en-US', options);
-            }
-
-            function formatCategory(category) {
-                return category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ');
-            }
-        });
-    </script>
+        function formatCategory(category) {
+            if (!category) return '';
+            // Make the first letter of each word uppercase (e.g., "food and drinks")
+            return category.split(/[\s&]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+        
+        // --- INITIALIZATION ---
+        fetchBudget(); 
+    });
+</script>
 </body>
 </html>

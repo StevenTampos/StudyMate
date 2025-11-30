@@ -1,81 +1,162 @@
-/* app.js - StudyMate shared logic (localStorage + rendering) */
+/* app.js - StudyMate shared logic (API + rendering) */
 
-const STORAGE_KEY = "studymate_tasks_v1";
+// ===========================================
+//  1. CONFIGURATION
+// ===========================================
+// CRITICAL: Ensure this path is correct for your XAMPP setup:
+const API_URL = "http://localhost/studymate/tasks.php"; 
+const TOKEN_KEY = "studymate_auth_token"; // Key for storing the auth token
 
-/* Task model
-  {
-    id: 'unique',
-    title: 'text',
-    subject: 'Math',
-    due_date: 'YYYY-MM-DD',
-    due_time: 'HH:MM',
-    priority: 'low|medium|high',
-    completed: false,
-    created_at: timestamp
-  }
-*/
+// ===========================================
+//  2. AUTHENTICATION & API DATA FETCH
+// ===========================================
 
-function loadTasks() {
+// Global logout function (used if token is invalid)
+function logout() {
+    localStorage.removeItem(TOKEN_KEY); 
+    // CRITICAL: Redirect to the login page
+    window.location.href = 'login.html'; 
+}
+
+async function fetchTasks() {
+    const token = localStorage.getItem(TOKEN_KEY); 
+    
+    // Safety check: If no token, API calls will fail, force logout
+    if (!token) {
+        logout(); 
+        return []; 
+    } 
+
     try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        const response = await fetch(API_URL, {
+            method: 'GET',
+            headers: {
+                // PHP API must read this header for authentication
+                'Authorization': `Bearer ${token}`, 
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        // Handle 401 response (Unauthorized/Token Expired)
+        if (response.status === 401) {
+             logout();
+             return [];
+        }
+        if (!response.ok) throw new Error(`API fetch failed with status: ${response.status}`);
+        
+        // The API returns DB rows. We map them to match the frontend's expected format.
+        const tasks = await response.json();
+        return tasks.map(t => ({
+            ...t,
+            id: String(t.id),
+            completed: t.status === 'Completed',
+            // Backend uses 'description' for subject
+            subject: t.description || t.subject || '',
+            title: t.title || '',
+            due_date: t.due_date || null,
+            priority: t.priority || 'medium'
+            
+        }));
+
     } catch (e) {
-        console.error("Failed to parse tasks", e);
+        console.error("Failed to load tasks from API", e);
+        // If the error is a SyntaxError (JSON crash), it means PHP outputted HTML error.
+        alert("CRITICAL: Failed to connect to API or server error. Check console for PHP error.");
         return [];
     }
 }
 
-function saveTasks(tasks) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+// ===========================================
+//  3. UTILITIES (Modified for robust date handling)
+// ===========================================
+
+function getSafeDate(d) {
+    if (!d) return null;
+    if (d instanceof Date && !isNaN(d.getTime())) return d;
+    if (typeof d === 'string') {
+        const datePart = d.split('T')[0];
+        const date = new Date(datePart + "T00:00:00");
+        return isNaN(date.getTime()) ? null : date;
+    }
+    return null;
 }
 
-/* Utilities */
 function uid() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
 }
 function formatDate(d) {
-    if (!d) return "";
-    const date = new Date(d + "T00:00:00");
+    const date = getSafeDate(d);
+    if (!date) return "Invalid Date";
     return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
-function isOverdue(d, t = "23:59") {
+function isOverdue(d) {
+    const due = getSafeDate(d);
+    if (!due) return false;
     const today = new Date();
-    const due = new Date(d + "T" + t + ":00");
+    today.setHours(0, 0, 0, 0); 
+    due.setHours(0, 0, 0, 0); 
     return due < today;
 }
 
-/* Dashboard: render stats and task list with optional filter */
-function renderDashboard(filter = "all") {
-    const tasks = loadTasks();
+function daysLeftText(d) {
+    const due = getSafeDate(d);
+    if (!due) return "Invalid Date";
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    due.setHours(0, 0, 0, 0); 
+
+    const diffMs = due.getTime() - today.getTime();
+    const diff = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diff < 0) return `${Math.abs(diff)} day(s) overdue`;
+    if (diff === 0) return `Due today`;
+    if (diff === 1) return `1 day left`;
+    return `${diff} days left`;
+}
+
+// ===========================================
+//  4. RENDERING FUNCTIONS (Made ASYNC)
+// ===========================================
+
+async function renderDashboard(filterSubject = "all") {
+    const tasks = await fetchTasks(); // <<< API CALL
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
     const pending = total - completed;
+    const overdue = tasks.filter(t => !t.completed && isOverdue(t.due_date)).length;
 
     // stats
     const elTotal = document.querySelector("#total-tasks");
     const elCompleted = document.querySelector("#completed-tasks");
     const elPending = document.querySelector("#pending-tasks");
-    const elSubjects = document.querySelector("#subjects-count");
+    const elOverdue = document.querySelector("#overdue-tasks");
     if (elTotal) elTotal.textContent = total;
     if (elCompleted) elCompleted.textContent = completed;
     if (elPending) elPending.textContent = pending;
-    if (elSubjects) {
-        const subjectSet = new Set(tasks.map(t => t.subject).filter(s => s && s.trim().length));
-        elSubjects.textContent = subjectSet.size;
+    if (elOverdue) elOverdue.textContent = overdue;
+
+    // subject dropdown
+    const subjectSet = new Set(tasks.map(t => t.subject).filter(s => s && s.trim().length));
+    const subjectSelect = document.querySelector("#subject-filter");
+    if (subjectSelect) {
+        const current = subjectSelect.value || "all";
+        subjectSelect.innerHTML = `<option value="all">All Subjects</option>`;
+        Array.from(subjectSet).sort().forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s;
+            opt.textContent = s;
+            subjectSelect.appendChild(opt);
+        });
+        subjectSelect.value = current;
     }
 
     // task list
-    const list = document.querySelector("#tasks-list");
+    const list = document.querySelector("#task-list");
     if (!list) return;
-
-    let filtered = tasks;
-    if (filter === "pending") {
-        filtered = tasks.filter(t => !t.completed);
-    } else if (filter === "completed") {
-        filtered = tasks.filter(t => t.completed);
-    }
-
+    const filtered = filterSubject === "all" ? tasks : tasks.filter(t => t.subject === filterSubject);
     if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty">No tasks found. Click <strong>Add Task</strong> to create one.</div>`;
+        list.innerHTML = `<div class="empty">No tasks found. Click <strong>Add New Task</strong> to create one.</div>`;
         return;
     }
 
@@ -86,7 +167,7 @@ function renderDashboard(filter = "all") {
     });
 
     list.innerHTML = filtered.map(t => {
-        const overdueClass = !t.completed && isOverdue(t.due_date, t.due_time) ? "overdue" : "";
+        const overdueClass = !t.completed && isOverdue(t.due_date) ? "overdue" : "";
         const completedClass = t.completed ? "completed" : "";
         return `
       <div class="task-item ${completedClass} ${overdueClass}" data-id="${t.id}">
@@ -96,8 +177,8 @@ function renderDashboard(filter = "all") {
             <div class="task-title">${escapeHtml(t.title)}</div>
             <div class="task-meta">
               <div class="task-subject">${escapeHtml(t.subject)}</div>
-              <div>Due: ${formatDate(t.due_date)} at ${t.due_time} ${(!t.completed && isOverdue(t.due_date, t.due_time)) ? '<span style="color:var(--danger);font-weight:700;margin-left:6px">Overdue</span>' : ''}</div>
-              <div style="padding-left:6px">${capitalize(t.priority)} priority</div>
+              <div>Due: ${formatDate(t.due_date)} ${(!t.completed && isOverdue(t.due_date)) ? '<span style="color:var(--danger);font-weight:700;margin-left:6px">Overdue</span>' : ''}</div>
+              <div style="padding-left:6px">${capitalize(t.priority || 'medium')} priority</div>
             </div>
           </div>
         </div>
@@ -110,37 +191,10 @@ function renderDashboard(filter = "all") {
     }).join("");
 }
 
-/* Deadlines page */
-function renderDeadlines() {
-    const tasks = loadTasks();
-    if (!document.querySelector("#deadlines-list")) return;
-    if (tasks.length === 0) {
-        document.querySelector("#deadlines-list").innerHTML = `<div class="empty">No tasks yet.</div>`;
-        return;
-    }
 
-    // sort by due date ascending
-    const sorted = [...tasks].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-    document.querySelector("#deadlines-list").innerHTML = sorted.map(t => {
-        const overdueClass = !t.completed && isOverdue(t.due_date, t.due_time) ? "overdue" : "";
-        return `
-      <div class="deadline-item ${overdueClass}">
-        <div>
-          <div style="font-weight:700">${escapeHtml(t.title)}</div>
-          <div style="color:var(--muted);font-size:0.9rem">${escapeHtml(t.subject)} • ${formatDate(t.due_date)} at ${t.due_time}</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          ${t.completed ? '<div style="color:var(--success);font-weight:700">Completed</div>' : (isOverdue(t.due_date, t.due_time) ? '<div style="color:var(--danger);font-weight:700">Overdue</div>' : `<div style="color:var(--muted)">${daysLeftText(t.due_date, t.due_time)}</div>`)}
-          <button class="icon-btn delete-btn" onclick="deleteTask('${t.id}')">🗑</button>
-        </div>
-      </div>
-    `;
-    }).join("");
-}
 
-/* Subjects page: show list of subjects and progress */
-function renderSubjects() {
-    const tasks = loadTasks();
+async function renderSubjects() {
+    const tasks = await fetchTasks(); // <<< API CALL
     if (!document.querySelector("#subjects-list")) return;
     const subjects = {};
     tasks.forEach(t => {
@@ -171,71 +225,69 @@ function renderSubjects() {
     }).join("");
 }
 
-/* helpers for days left */
-function daysLeftText(d, t = "23:59") {
-    const today = new Date();
-    const due = new Date(d + "T" + t + ":00");
-    const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-    if (diff < 0) return `${Math.abs(diff)} day(s) overdue`;
-    if (diff === 0) return `Due today`;
-    if (diff === 1) return `1 day left`;
-    return `${diff} days left`;
+// ===========================================
+//  5. CRUD ACTIONS (API-Driven)
+// ===========================================
+
+async function sendApiRequest(url, method, body = null) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    
+    const options = { method, headers };
+    if (body) {
+        options.body = JSON.stringify(body);
+    }
+    
+    const response = await fetch(url, options);
+
+    if (response.status === 401) {
+        logout();
+        throw new Error("Unauthorized");
+    }
+    if (!response.ok && response.status !== 204) { // 204 is OK for DELETE
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(errorData.error || `API Request Failed with status ${response.status}`);
+    }
+    return response;
 }
 
-/* CRUD actions used across pages */
-function addTask({ title, subject, due_date, due_time, priority }) {
-    const tasks = loadTasks();
-    const t = {
-        id: uid(),
-        title: title.trim(),
-        subject: subject.trim(),
-        due_date: due_date,
-        due_time: due_time || "23:59",
-        priority: priority || "medium",
-        completed: false,
-        created_at: new Date().toISOString()
-    };
-    tasks.push(t);
-    saveTasks(tasks);
-    refreshAll();
+async function addTask({ title, subject, due_date, priority }) {
+    await sendApiRequest(API_URL, 'POST', { title, subject: subject.trim(), due_date, priority });
+    await refreshAll();
 }
 
-function updateTask(updated) {
-    const tasks = loadTasks();
-    const idx = tasks.findIndex(t => t.id === updated.id);
-    if (idx === -1) return;
-    tasks[idx] = updated;
-    saveTasks(tasks);
-    refreshAll();
+async function updateTask(updated) {
+    const { id, ...data } = updated;
+    await sendApiRequest(`${API_URL}/${id}`, 'PUT', { ...data, subject: data.subject.trim() });
+    await refreshAll();
 }
 
-function deleteTask(id) {
+async function deleteTask(id) {
     if (!confirm("Delete this task?")) return;
-    const tasks = loadTasks().filter(t => t.id !== id);
-    saveTasks(tasks);
-    refreshAll();
+    await sendApiRequest(`${API_URL}/${id}`, 'DELETE');
+    await refreshAll();
 }
 
-/* toggle complete */
-function toggleComplete(id) {
-    const tasks = loadTasks();
-    const idx = tasks.findIndex(t => t.id === id);
-    if (idx === -1) return;
-    tasks[idx].completed = !tasks[idx].completed;
-    saveTasks(tasks);
-    refreshAll();
+async function toggleComplete(id) {
+    const tasks = await fetchTasks();
+    const task = tasks.find(t => t.id == id); 
+    if (!task) return;
+    await sendApiRequest(`${API_URL}/${id}`, 'PUT', { completed: !task.completed }); 
+    await refreshAll();
 }
 
 /* Edit modal support: open with values */
-function openEditModal(id) {
-    const tasks = loadTasks();
-    const t = tasks.find(x => x.id === id);
+async function openEditModal(id) {
+    const tasks = await fetchTasks();
+    const t = tasks.find(x => x.id == id);
     if (!t) return;
-    // reuse modal show, populate fields
     showModal({ ...t, _edit: true });
 }
 
-/* Modal system: used on Dashboard only */
+// ===========================================
+//  6. MODAL & REFRESH LOGIC (Made ASYNC)
+// ===========================================
+
 function showModal(data = null) {
     // data === null => create new; data._edit === true => edit existing
     const backdrop = document.createElement("div");
@@ -263,10 +315,6 @@ function showModal(data = null) {
         <input class="input" type="date" id="m-due" value="${data ? data.due_date : ''}">
       </div>
       <div class="form-row">
-        <label>Due Time</label>
-        <input class="input" type="time" id="m-time" value="${data ? data.due_time : new Date().toTimeString().slice(0,5)}">
-      </div>
-      <div class="form-row">
         <label>Priority</label>
         <select class="input" id="m-priority">
           <option value="low"${data && data.priority === 'low' ? ' selected' : ''}>Low</option>
@@ -291,18 +339,10 @@ function showModal(data = null) {
     document.getElementById("modal-close").onclick = () => closeModal();
     document.getElementById("modal-cancel").onclick = () => closeModal();
 
-    // close modal when clicking backdrop
-    backdrop.addEventListener('click', (e) => {
-        if (e.target === backdrop) {
-            closeModal();
-        }
-    });
-
-    document.getElementById("modal-save").onclick = () => {
+    document.getElementById("modal-save").onclick = async () => {
         const title = document.getElementById("m-title").value.trim();
         const subject = document.getElementById("m-subject").value.trim();
         const due = document.getElementById("m-due").value;
-        const time = document.getElementById("m-time").value;
         const priority = document.getElementById("m-priority").value;
 
         if (!title || !subject || !due) {
@@ -310,14 +350,18 @@ function showModal(data = null) {
             return;
         }
 
-        if (data && data._edit) {
-            const updated = { ...data, title, subject, due_date: due, due_time: time, priority };
-            delete updated._edit;
-            updateTask(updated);
-        } else {
-            addTask({ title, subject, due_date: due, due_time: time, priority });
+        try {
+            if (data && data._edit) {
+                const updated = { ...data, title, subject, due_date: due, priority };
+                delete updated._edit;
+                await updateTask(updated);
+            } else {
+                await addTask({ title, subject, due_date: due, priority });
+            }
+            closeModal();
+        } catch (e) {
+            alert("Error saving task: " + e.message);
         }
-        closeModal();
     };
 }
 
@@ -334,19 +378,19 @@ function escapeHtml(txt) {
 function capitalize(s) { if (!s) return ""; return s.charAt(0).toUpperCase() + s.slice(1); }
 
 /* refresh render on all pages */
-function refreshAll() {
+async function refreshAll() {
     // determine page by body id
     const bodyId = document.body.getAttribute("data-page");
     if (bodyId === "dashboard") {
         const filter = document.querySelector("#subject-filter") ? document.querySelector("#subject-filter").value : "all";
-        renderDashboard(filter);
+        await renderDashboard(filter);
     } else if (bodyId === "deadlines") {
-        renderDeadlines();
+        await renderDeadlines();
     } else if (bodyId === "subjects") {
-        renderSubjects();
+        await renderSubjects();
     } else {
         // default: update counts if present
-        renderDashboard("all");
+        await renderDashboard("all");
     }
 }
 
@@ -359,7 +403,38 @@ document.addEventListener("click", (e) => {
 
 // app.js (snippet)
 const addBtn = document.querySelector('.open-add');
+const modalBackdrop = document.querySelector('.modal-backdrop');
 
-addBtn.addEventListener('click', () => {
-    showModal(null);
+if (addBtn) {
+    addBtn.addEventListener('click', () => {
+        if (modalBackdrop) {
+            modalBackdrop.style.display = 'flex';
+            modalBackdrop.classList.add('show');
+        }
+    });
+}
+
+if (modalBackdrop) {
+    modalBackdrop.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-backdrop')) {
+            modalBackdrop.classList.remove('show');
+            setTimeout(() => (modalBackdrop.style.display = 'none'), 300);
+        }
+    });
+}
+
+window.logout = logout; 
+
+// Run the initial Route Guard check after the DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem(TOKEN_KEY); 
+    // Check if the current body has a data-page attribute for login or register
+    const isAuthPage = document.body.getAttribute('data-page') === 'login' || 
+                       document.body.getAttribute('data-page') === 'register';
+
+    // If no token AND not on an authentication page, redirect.
+    if (!token && !isAuthPage) {
+        // This calls the robust logout() function defined earlier, which handles the redirect.
+        logout(); 
+    }
 });

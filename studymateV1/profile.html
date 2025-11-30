@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en" style="height: 100%;">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>StudyMate — Profile</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease;
+        }
+        
+        .profile-container {
+            max-width: 600px;
+            margin: 40px auto 0;
+            padding: 20px 0 40px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .card {
+            background: var(--card-bg, white);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--card-shadow, 0 2px 8px rgba(0, 0, 0, 0.1));
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .profile-picture-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .profile-picture {
+            position: relative;
+            overflow: hidden;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            background: var(--header-grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            font-weight: 700;
+        }
+        
+        .profile-picture:hover .profile-picture-actions {
+            display: block !important;
+        }
+        
+        .profile-picture img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .profile-info-header {
+            flex: 1;
+        }
+        
+        .profile-info-header h2 {
+            margin: 0 0 4px 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+        
+        .profile-info-header p {
+            margin: 0;
+            color: var(--muted);
+        }
+        
+        #picture-upload {
+            display: none;
+        }
+        
+        .profile-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        
+        .profile-field label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .profile-field .value {
+            padding: 0;
+            background: var(--input-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .editable-field {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--input-text);
+            font-family: inherit;
+            font-size: 1rem;
+            border-radius: 8px;
+        }
+        
+        .editable-field:disabled {
+            background: transparent;
+            cursor: default;
+        }
+        
+        .editable-field:not(:disabled) {
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-prefix {
+            padding: 0 0 0 12px;
+            color: var(--text-primary);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .primary-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .primary-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .secondary-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .secondary-btn:hover {
+            background: var(--input-bg);
+        }
+        
+        .edit-btn {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            margin-left: auto;
+        }
+        
+        .edit-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
+        }
+        
+        .logout-btn {
+            background: var(--danger);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .logout-btn:hover {
+            background: #e53e3e;
+            transform: scale(1.02);
+        }
+        
+        /* Theme Toggle Switch */
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .theme-toggle-container span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 40px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+    </style>
+</head>
+<body data-page="profile">
+    <nav class="navbar">
+        <div class="brand">StudyMate</div>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="deadlines.html">Deadlines</a>
+            <a href="subjects.html">Subjects</a>
+            <a href="budget.html">Finance</a>
+            <a href="profile.html" class="active">Profile</a>
+        </div>
+    </nav>
+    <section class="hero">
+        <h1>Profile</h1>
+        <p>Your account information</p>
+    </section>
+    <div class="container profile-container" style="min-height: calc(100vh - 100px);">
+        <div class="card">
+            <div class="profile-header">
+                <div class="profile-picture-wrapper">
+                    <div class="profile-picture" id="profile-picture">
+                        <span id="profile-initial">S</span>
+                        <div class="profile-picture-actions" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
+                            <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                            <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+                        </div>
+                    </div>
+                    <input type="file" id="picture-upload" accept="image/*" onchange="handlePictureUpload(event)" style="display: none;">
+                </div>
+                <div class="profile-info-header">
+                    <h2 id="profile-display-name">Student</h2>
+                    <p id="profile-display-username">@student</p>
+                </div>
+            </div>
+            
+            <div class="section-header">
+                <div class="section-title">User Information</div>
+                <button class="edit-btn" onclick="toggleEditMode(true)">Edit</button>
+            </div>
+            
+            <div class="profile-field">
+                <label for="name-input">Name</label>
+                <div class="value">
+                    <input type="text" id="name-input" class="editable-field" value="Student" disabled>
+                </div>
+            </div>
+            
+            <div class="profile-field">
+                <label for="username-input">Username</label>
+                <div class="value">
+                    <div class="input-group">
+                        <span class="input-prefix">@</span>
+                        <input type="text" id="username-input" class="editable-field" value="student" disabled>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-field">
+                <label for="email-input">Email</label>
+                <div class="value">
+                    <input type="email" id="email-input" class="editable-field" value="student@studymate.com" disabled>
+                </div>
+            </div>
+            
+            <div class="profile-field">
+                <label for="subjects-input">Subjects (comma separated)</label>
+                <div class="value">
+                    <input type="text" id="subjects-input" class="editable-field" value="" placeholder="e.g., Math, Science, History" disabled>
+                </div>
+            </div>
+            
+            <div class="button-group" style="display: none; margin-top: 20px; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="secondary-btn" id="cancel-edit" onclick="toggleEditMode(false)">Cancel</button>
+                <button type="button" class="primary-btn" id="save-changes" onclick="saveProfile()">Save Changes</button>
+            </div>
+            
+            <div class="profile-field" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <label>Color Theme</label>
+                <div class="theme-toggle-container" style="margin-top: 10px;">
+                    <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); min-width: 40px;">Light</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); min-width: 40px;">Dark</span>
+                </div>
+            </div>
+            
+            <button class="logout-btn" style="margin-top: 30px;" onclick="logout()">Logout</button>
+        </div>
+    </div>
+    
+    <script>
+        const PROFILE_KEY = "studymate_profile_v1";
+        const THEME_KEY = "studymate_theme_v1";
+        
+        // Theme management
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+            applyTheme(savedTheme);
+            
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.checked = savedTheme === 'dark';
+                themeToggle.addEventListener('change', function() {
+                    const newTheme = this.checked ? 'dark' : 'light';
+                    applyTheme(newTheme);
+                    localStorage.setItem(THEME_KEY, newTheme);
+                });
+            }
+        }
+        
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.checked = theme === 'dark';
+            }
+        }
+        
+        // Load saved profile data or use defaults
+        function loadProfile() {
+            const savedProfile = localStorage.getItem(PROFILE_KEY);
+            if (savedProfile) {
+                const profile = JSON.parse(savedProfile);
+                document.getElementById('name-input').value = profile.name || 'Student';
+                document.getElementById('username-input').value = profile.username || 'student';
+                document.getElementById('email-input').value = profile.email || 'student@studymate.com';
+                document.getElementById('subjects-input').value = profile.subjects || '';
+                document.getElementById('profile-initial').textContent = (profile.name || 'S').charAt(0).toUpperCase();
+                
+                // Load profile picture if exists
+                if (profile.picture) {
+                    const profilePicture = document.getElementById('profile-picture');
+                    profilePicture.style.background = 'none';
+                    profilePicture.innerHTML = `
+                        <img src="${profile.picture}" alt="Profile Picture">
+                        <div class="profile-picture-actions" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
+                            <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                            <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Save profile data
+        function saveProfile() {
+            const savedProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+            const profile = {
+                name: document.getElementById('name-input').value,
+                username: document.getElementById('username-input').value,
+                email: document.getElementById('email-input').value,
+                subjects: document.getElementById('subjects-input').value,
+                picture: savedProfile.picture // Preserve picture
+            };
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+            document.getElementById('profile-initial').textContent = profile.name.charAt(0).toUpperCase();
+            toggleEditMode(false);
+        }
+        
+        // Toggle edit mode
+        function toggleEditMode(enable) {
+            const fields = document.querySelectorAll('.editable-field');
+            const buttonGroup = document.querySelector('.button-group');
+            const editBtn = document.querySelector('.edit-btn');
+            const profilePicture = document.getElementById('profile-picture');
+            
+            fields.forEach(field => {
+                field.disabled = !enable;
+                if (enable && field.id === 'name-input') {
+                    field.focus();
+                    field.select();
+                }
+            });
+            
+            const actions = profilePicture.querySelector('.profile-picture-actions');
+            if (actions) {
+                actions.style.display = enable ? 'block' : 'none';
+            }
+            
+            buttonGroup.style.display = enable ? 'flex' : 'none';
+            editBtn.style.display = enable ? 'none' : 'block';
+            
+            if (!enable) {
+                loadProfile(); // Reload if cancelled
+            }
+        }
+        
+        // Remove profile picture
+        function removeProfilePicture(event) {
+            event.stopPropagation();
+            const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+            delete profile.picture;
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+            
+            const profilePicture = document.getElementById('profile-picture');
+            const initial = document.getElementById('profile-initial')?.textContent || 'S';
+            profilePicture.style.background = 'var(--header-grad)';
+            profilePicture.innerHTML = `
+                <span id="profile-initial">${initial}</span>
+                <div class="profile-picture-actions" style="display: block; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
+                    <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                    <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+                </div>
+            `;
+        }
+        
+        function handlePictureUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 2 * 1024 * 1024) {
+                alert("Image size should be less than 2MB");
+                return;
+            }
+            
+            if (!file.type.startsWith('image/')) {
+                alert("Please upload an image file");
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const savedProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+                savedProfile.picture = e.target.result;
+                localStorage.setItem(PROFILE_KEY, JSON.stringify(savedProfile));
+                
+                const profilePicture = document.getElementById('profile-picture');
+                profilePicture.style.background = 'none';
+                profilePicture.innerHTML = `
+                    <img src="${e.target.result}" alt="Profile Picture">
+                    <div class="profile-picture-actions" style="display: block; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
+                        <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                        <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function logout() {
+            if (confirm("Are you sure you want to logout?")) {
+                alert("Logged out successfully!");
+                window.location.href = "index.html";
+            }
+        }
+        
+        // Initialize everything
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeTheme();
+            loadProfile();
+            
+            document.querySelectorAll('.editable-field').forEach(field => {
+                field.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveProfile();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

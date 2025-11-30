@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>StudyMate — Deadlines</title>
     <link rel="stylesheet" href="style.css">
-    <script src="theme.js" defer></script>
+    <script src="theme.js"></script>
     <style>
         .deadline-item {
             display: flex;
@@ -115,12 +115,10 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: all 0.2s ease;
         }
 
         .calendar-nav:hover {
-            background: var(--primary-dark);
-            transform: scale(1.05);
+            background: var(--primary-dark, #0056b3);
         }
 
         .calendar-grid {
@@ -137,7 +135,7 @@
         }
 
         .calendar-day {
-            min-height: 100px; /* Use min-height instead of fixed height */
+            height: 100px;
             padding: 8px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -145,13 +143,6 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .calendar-day.not-in-month {
-            opacity: 0.5;
-            background: var(--bg-secondary);
         }
 
         .calendar-day.today {
@@ -178,7 +169,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            cursor: pointer;
         }
 
         .calendar-task.overdue {
@@ -186,6 +176,7 @@
         }
 
         .calendar-day:hover {
+            cursor: pointer;
             background: rgba(59, 130, 246, 0.05);
         }
 
@@ -206,7 +197,6 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeIn 0.3s ease-out;
         }
 
         .day-modal {
@@ -218,7 +208,6 @@
             max-height: 80vh;
             overflow-y: auto;
             border: 1px solid var(--border-color);
-            animation: slideIn 0.3s ease-out;
         }
 
         .day-modal-header {
@@ -247,7 +236,7 @@
         }
 
         .day-modal-close:hover {
-            color: var(--text-primary);
+            background: var(--muted);
         }
 
         .day-task-item {
@@ -274,14 +263,6 @@
         .day-task-meta {
             font-size: 0.85rem;
             color: var(--text-secondary);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        
-        .day-task-meta .deadline-status {
-            padding: 2px 8px;
-            border-radius: 4px;
         }
 
         .day-no-deadlines {
@@ -299,9 +280,6 @@
             font-size: 1.1rem;
             color: var(--text-secondary);
         }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateY(-20px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
     </style>
 </head>
 
@@ -319,7 +297,7 @@
 
     <section class="hero">
         <h1>Deadlines</h1>
-        <p>Calendar view of your assignments and exams</p>
+        <p>See upcoming deadlines, sorted by date</p>
     </section>
 
     <div class="container">
@@ -344,7 +322,6 @@
                     <div class="day-header">Sat</div>
                 </div>
             </div>
-            <p style="text-align:center; margin-top: 20px; color: var(--muted); font-size: 0.9rem;">Click on a day to see full details.</p>
         </div>
     </div>
 
@@ -361,9 +338,6 @@
 
     <script src="app.js"></script>
     <script>
-        // NOTE: The entire calendar rendering and logic must be defined here, 
-        // but it must call the global fetchTasks() from app.js.
-        
         let currentDate = new Date();
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -389,32 +363,34 @@
             });
         });
 
-        // This function overrides the basic renderDeadlines in app.js if it exists,
-        // but crucially calls fetchTasks() internally.
-        async function renderCalendar() {
-            // Fetch tasks using the API-driven function from app.js
-            const tasks = await fetchTasks(); 
-            
-            if (tasks.length === 0) {
-                 const calendarGrid = document.querySelector('.calendar-grid');
-                 calendarGrid.insertAdjacentHTML('afterend', '<div class="empty-deadlines"><h3>No Deadlines Yet!</h3><p>Start adding tasks to see them appear here.</p></div>');
-                 return;
-            }
+        function renderCalendar(filter = 'all') {
+            const tasks = JSON.parse(localStorage.getItem('studymate_tasks_v1')) || [];
 
-            // Filter tasks (using only non-completed tasks for deadlines view)
+            // Filter tasks
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
-            const filteredTasks = tasks.filter(task => !task.completed);
+            const sevenDaysFromNow = new Date(today);
+            sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+            const filteredTasks = tasks.filter(task => {
+                const deadline = new Date(task.due_date);
+                deadline.setHours(0, 0, 0, 0);
+
+                if (filter === 'overdue') {
+                    return deadline < today && !task.completed;
+                } else if (filter === 'upcoming') {
+                    return deadline >= today && deadline <= sevenDaysFromNow && !task.completed;
+                } else if (filter === 'future') {
+                    return deadline > sevenDaysFromNow && !task.completed;
+                }
+                return !task.completed; // 'all' - show all non-completed
+            });
 
             // Group tasks by date
             const tasksByDate = {};
             filteredTasks.forEach(task => {
-                // Ensure date is standardized to prevent timezone issues
-                const dateOnly = task.due_date.split('T')[0];
-                const deadline = new Date(dateOnly);
+                const deadline = new Date(task.due_date);
                 deadline.setHours(0, 0, 0, 0);
-
                 const dateKey = deadline.toDateString();
                 if (!tasksByDate[dateKey]) tasksByDate[dateKey] = [];
                 tasksByDate[dateKey].push(task);
@@ -434,22 +410,17 @@
 
             // First day of the month
             const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
             const startDate = new Date(firstDay);
-            // Calculate the day to start the grid (Sunday = 0)
             startDate.setDate(startDate.getDate() - firstDay.getDay());
 
-            // Generate calendar days
+            // Generate 42 days (6 weeks)
             for (let i = 0; i < 42; i++) {
                 const day = new Date(startDate);
                 day.setDate(startDate.getDate() + i);
 
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'calendar-day';
-
-                // Check if day is outside the current month
-                if (day.getMonth() !== month) {
-                    dayDiv.classList.add('not-in-month');
-                }
 
                 // Check if day is today
                 const isToday = day.toDateString() === today.toDateString();
@@ -466,15 +437,13 @@
                 dayNumber.textContent = day.getDate();
                 dayDiv.appendChild(dayNumber);
 
-                // Tasks for this day (limit to 3 for preview)
+                // Tasks for this day
                 dayTasks.slice(0, 3).forEach(task => {
                     const taskDiv = document.createElement('div');
                     taskDiv.className = 'calendar-task';
-                    
-                    const taskDate = new Date(task.due_date.split('T')[0]);
-                    taskDate.setHours(0,0,0,0);
-                    if (taskDate < today) taskDiv.classList.add('overdue');
-                    
+                    const deadline = new Date(task.due_date);
+                    const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+                    if (daysUntil < 0) taskDiv.classList.add('overdue');
                     taskDiv.textContent = task.title.length > 10 ? task.title.substring(0, 10) + '...' : task.title;
                     dayDiv.appendChild(taskDiv);
                 });
@@ -493,7 +462,10 @@
             }
         }
 
-        // NOTE: The utility function formatDate is already defined in app.js, so we skip it here.
+        function formatDate(dateString) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
 
         function showDayModal(date, tasks) {
             const modalTitle = document.getElementById('day-modal-title');
@@ -508,9 +480,11 @@
                 day: 'numeric'
             });
 
+            // Clear previous content
             modalContent.innerHTML = '';
 
             if (tasks.length === 0) {
+                // No deadlines message
                 const noDeadlinesDiv = document.createElement('div');
                 noDeadlinesDiv.className = 'day-no-deadlines';
                 noDeadlinesDiv.innerHTML = `
@@ -519,16 +493,15 @@
                 `;
                 modalContent.appendChild(noDeadlinesDiv);
             } else {
+                // Show tasks
                 tasks.forEach(task => {
                     const taskItem = document.createElement('div');
                     taskItem.className = 'day-task-item';
 
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    
-                    const taskDate = new Date(task.due_date.split('T')[0]);
-                    taskDate.setHours(0, 0, 0, 0);
-                    const daysUntil = Math.ceil((taskDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    const deadline = new Date(task.due_date);
+                    const daysUntil = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
 
                     let statusText = '';
                     let statusClass = '';
@@ -547,16 +520,21 @@
                         statusClass = 'status-future';
                     }
 
-                    // Since we only store date, we default the time display or use a placeholder
-                    const timeString = 'End of day'; 
-                    
+                    // Format the due date with time
+                    const dueTime = task.due_time || '23:59';
+                    const dueDateTime = new Date(task.due_date + 'T' + dueTime + ':00');
+                    const timeString = dueDateTime.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
 
                     taskItem.innerHTML = `
                         <div class="day-task-info">
                             <div class="day-task-title">${task.title}</div>
                             <div class="day-task-meta">
                                 <span class="deadline-subject">${task.subject}</span>
-                                <span class="deadline-time">Priority: ${task.priority.toUpperCase()}</span>
+                                <span class="deadline-time">Due at ${timeString}</span>
                                 <span class="deadline-status ${statusClass}">${statusText}</span>
                             </div>
                         </div>
@@ -566,6 +544,7 @@
                 });
             }
 
+            // Show modal
             modalBackdrop.style.display = 'flex';
         }
 
