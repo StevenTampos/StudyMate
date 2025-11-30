@@ -1,14 +1,24 @@
 // theme.js - StudyMate Theme Management
+//
 
 (function() {
     'use strict';
     
     const THEME_KEY = 'studymate_theme_v1';
+    const NO_TRANSITION_CLASS = 'no-transition'; // FIX 7: Class to disable transitions
     
     // 1. Initialize theme immediately to prevent flash
     function initializeTheme() {
+        // FIX 7: Disable transitions before applying theme
+        document.documentElement.classList.add(NO_TRANSITION_CLASS);
+        
         const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
         applyTheme(savedTheme, false);
+        
+        // FIX 7: Re-enable transitions after the theme is applied
+        window.requestAnimationFrame(() => {
+            document.documentElement.classList.remove(NO_TRANSITION_CLASS);
+        });
     }
     
     // 2. Apply theme to the page

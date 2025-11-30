@@ -36,8 +36,7 @@ function getAuthorizationHeader(){
 
 // Helper: Generate Token
 function generateToken($studentId) {
-    // Expires in 24 hours
-    $expiration_time = time() + (24 * 3600); 
+    $expiration_time = time() + (24 * 3600); // 24 hours
     $payload = [
         'studentId' => $studentId,
         'exp' => $expiration_time
@@ -66,7 +65,6 @@ $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $_GET['action'] ?? null;
 
-// Determine student ID for protected routes
 $student_id = validateTokenAndGetStudentId($pdo);
 
 switch ($action) {
@@ -151,7 +149,8 @@ switch ($action) {
                 die(json_encode(["error" => "Unauthorized."]));
             }
             try {
-                $sql = 'SELECT student_id, username, full_name, email FROM students WHERE student_id = ?'; 
+                // Fetch profile fields + theme_preference
+                $sql = 'SELECT student_id, username, full_name, email, bio, profile_picture, theme_preference FROM students WHERE student_id = ?'; 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$student_id]);
                 $profile = $stmt->fetch();
@@ -172,9 +171,26 @@ switch ($action) {
                 die(json_encode(["error" => "Unauthorized."]));
             }
 
+            // HANDLE THEME UPDATE
+            if (isset($input['theme_preference'])) {
+                try {
+                    $sql = 'UPDATE students SET theme_preference = ? WHERE student_id = ?';
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute([$input['theme_preference'], $student_id]);
+                    echo json_encode(["message" => "Theme updated."]);
+                } catch (\PDOException $e) {
+                     http_response_code(500);
+                     die(json_encode(["error" => "Database error: " . $e->getMessage()]));
+                }
+                break; // Stop here, don't update other profile fields
+            }
+
+            // HANDLE FULL PROFILE UPDATE
             $name = $input['name'] ?? null;
             $username = $input['username'] ?? null;
             $email = $input['email'] ?? null;
+            $bio = $input['bio'] ?? '';
+            $picture = $input['picture'] ?? null;
             
             if (!$name || !$username || !$email) {
                  http_response_code(400);
@@ -191,9 +207,9 @@ switch ($action) {
                     die(json_encode(["error" => "Username or email already exists."]));
                 }
                 
-                $sql = 'UPDATE students SET full_name = ?, username = ?, email = ? WHERE student_id = ?';
+                $sql = 'UPDATE students SET full_name = ?, username = ?, email = ?, bio = ?, profile_picture = ? WHERE student_id = ?';
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([$name, $username, $email, $student_id]);
+                $stmt->execute([$name, $username, $email, $bio, $picture, $student_id]);
                 
                 echo json_encode(["message" => "Profile updated successfully."]);
             } catch (\PDOException $e) {

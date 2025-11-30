@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>StudyMate — Profile</title>
     <link rel="stylesheet" href="style.css">
+    <script src="theme.js" defer></script>
     <style>
         html {
             height: 100%;
@@ -294,7 +295,8 @@
         
         .slider:before {
             position: absolute;
-            content: "";
+            /* FIX 3: Add sun icon for light mode */
+            content: "☀️"; 
             height: 22px;
             width: 22px;
             left: 4px;
@@ -302,6 +304,10 @@
             background-color: white;
             transition: .4s;
             border-radius: 50%;
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            font-size: 14px; 
         }
         
         input:checked + .slider {
@@ -313,6 +319,8 @@
         }
         
         input:checked + .slider:before {
+            /* FIX 3: Add moon icon for dark mode */
+            content: "🌙"; 
             transform: translateX(30px);
         }
     </style>
@@ -397,7 +405,7 @@
                 <div class="theme-toggle-container" style="margin-top: 10px;">
                     <span id="themeLabel">Light</span>
                     <label class="switch">
-                        <input type="checkbox" id="themeToggle" onchange="changeTheme(this.checked ? 'dark' : 'light')">
+                        <input type="checkbox" id="themeToggle">
                         <span class="slider round"></span>
                     </label>
                     <span>Dark</span>
@@ -411,269 +419,132 @@
     
     <script src="app.js"></script>
 <script>
-    const AUTH_API_URL = "auth.php?action=profile";
-    const PROFILE_KEY = "studymate_profile_v1";
-    const THEME_KEY = "studymate_theme_v1";
+    // Note: Theme persistence and loading is now handled globally in app.js
     
-    // Ensure window.logout is available globally from app.js or theme.js
-    // Assuming the global logout is now available.
+    let currentProfilePicture = null;
 
-    /**
-     * Helper to perform API requests for profile management.
-     */
-    async function fetchProfileApi(method, body = null) {
-        const token = localStorage.getItem(TOKEN_KEY);
-        if (!token) {
-            // Use global logout
-            window.location.href = 'login.html'; 
-            return null;
-        }
-
-        const headers = { 
-            'Content-Type': 'application/json', 
-            'Authorization': `Bearer ${token}` 
-        };
-        const options = { method, headers };
-        if (body) {
-            options.body = JSON.stringify(body);
-        }
-        
-        try {
-            const response = await fetch(AUTH_API_URL, options);
-
-            if (response.status === 401) {
-                alert("Session expired. Logging out.");
-                window.location.href = 'login.html'; 
-                return null;
-            }
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: response.statusText }));
-                throw new Error(errorData.error || `API Request Failed with status ${response.status}`);
-            }
-            return response.status === 204 || response.status === 200 ? response.json().catch(() => ({})) : {};
-            
-        } catch (e) {
-            console.error("Profile API Error:", e);
-            // Don't alert here, let loadProfile handle network errors gracefully
-            throw e; 
-        }
-    }
-
-    // Load profile data from API and update UI
     async function loadProfile() {
-        // 1. Load data from API
         let apiProfile = {};
         try {
-            apiProfile = await fetchProfileApi('GET');
-        } catch (e) {
-            console.warn("Could not fetch profile from API. Using local data.", e);
-        }
+            // Using helper from app.js if available, or fetch directly
+            if (window.sendApiRequest) {
+               const token = localStorage.getItem("studymate_auth_token");
+               const response = await fetch("auth.php?action=profile", {
+                  headers: { 'Authorization': `Bearer ${token}` }
+               });
+               if(response.ok) apiProfile = await response.json();
+            }
+        } catch (e) { console.warn(e); }
 
-        // 2. Load locally-stored data (for subjects/bio and picture)
-        const localProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
-        
-        // 3. Combine and set defaults (full_name from API maps to name)
-        const finalProfile = {
-            name: apiProfile?.full_name || localProfile.name || 'Student',
-            username: apiProfile?.username || localProfile.username || 'student',
-            email: apiProfile?.email || localProfile.email || 'student@studymate.com',
-            bio: localProfile.bio || '', // CHANGED: Using 'bio' now
-            picture: localProfile.picture || null 
+        const profileData = {
+            name: apiProfile.full_name || 'Student',
+            username: apiProfile.username || 'student',
+            email: apiProfile.email || '',
+            bio: apiProfile.bio || '', 
+            picture: apiProfile.profile_picture || null
         };
         
-        // 4. Update DOM elements
-        document.getElementById('name-input').value = finalProfile.name;
-        document.getElementById('username-input').value = finalProfile.username;
-        document.getElementById('email-input').value = finalProfile.email;
-        document.getElementById('bio-input').value = finalProfile.bio; // CHANGED: Updated element ID
+        currentProfilePicture = profileData.picture;
 
-        
-        // 👇 These lines ensure the header displays the correct data
-        document.getElementById('profile-display-name').textContent = finalProfile.name;
-        document.getElementById('profile-display-username').textContent = '@' + finalProfile.username;
-        
-        document.getElementById('profile-initial').textContent = finalProfile.name.charAt(0).toUpperCase();
+        document.getElementById('name-input').value = profileData.name;
+        document.getElementById('username-input').value = profileData.username;
+        document.getElementById('email-input').value = profileData.email;
+        document.getElementById('bio-input').value = profileData.bio;
 
-        // 5. Save the combined data back to localStorage (for bio/picture persistence)
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(finalProfile));
+        document.getElementById('profile-display-name').textContent = profileData.name;
+        document.getElementById('profile-display-username').textContent = '@' + profileData.username;
         
-        // 6. Handle Profile Picture Display
-        const profilePicture = document.getElementById('profile-picture');
-        if (finalProfile.picture) {
-             profilePicture.style.background = 'none';
-             profilePicture.innerHTML = `
-                <img src="${finalProfile.picture}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                <div class="profile-picture-actions" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
-                    <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
-                    <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
-                </div>
-            `;
-        } else {
-            profilePicture.style.background = 'var(--header-grad)';
-            profilePicture.innerHTML = `<span id="profile-initial">${finalProfile.name.charAt(0).toUpperCase()}</span>`;
-            
-            const actions = document.createElement('div');
-            actions.className = 'profile-picture-actions';
-            actions.style.display = 'none';
-            actions.innerHTML = `
-                <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
-                <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
-            `;
-            profilePicture.appendChild(actions);
-        }
-        
-        return finalProfile;
+        updateProfilePictureUI(profileData.picture, profileData.name);
     }
 
-    // Save profile data to API and update local storage
+    function updateProfilePictureUI(base64Image, name) {
+        const profilePicture = document.getElementById('profile-picture');
+        const actionsHtml = `
+            <div class="profile-picture-actions" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
+                <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
+                <div onclick="removeProfilePicture(event)" style="color: white; cursor: pointer; font-size: 12px; margin-top: 4px;">Remove</div>
+            </div>
+        `;
+
+        if (base64Image) {
+             profilePicture.style.background = 'none';
+             profilePicture.innerHTML = `<img src="${base64Image}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">${actionsHtml}`;
+        } else {
+            profilePicture.style.background = 'var(--header-grad)';
+            profilePicture.innerHTML = `<span id="profile-initial">${name.charAt(0).toUpperCase()}</span>${actionsHtml}`;
+        }
+    }
+
     async function saveProfile() {
         const name = document.getElementById('name-input').value.trim();
         const username = document.getElementById('username-input').value.trim();
         const email = document.getElementById('email-input').value.trim();
-        const bio = document.getElementById('bio-input').value.trim(); // CHANGED: Using 'bio' now
+        const bio = document.getElementById('bio-input').value.trim();
         
-        if (!name || !username || !email) {
-            alert("Name, username, and email are required.");
-            return;
-        }
+        if (!name || !username || !email) { alert("Name, username, and email are required."); return; }
 
         try {
-            // 1. Update API (API only handles name, username, email - bio remains local)
-            await fetchProfileApi('PUT', { name, username, email });
+            const token = localStorage.getItem("studymate_auth_token");
+            await fetch("auth.php?action=profile", {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, username, email, bio, picture: currentProfilePicture })
+            });
             
-            // 2. Update local storage 
-            const currentLocal = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
-            const updatedLocal = {
-                ...currentLocal,
-                name,
-                username,
-                email,
-                bio // CHANGED: Storing 'bio' locally
-            };
-            localStorage.setItem(PROFILE_KEY, JSON.stringify(updatedLocal));
-            
-            // 3. Update header display
             document.getElementById('profile-display-name').textContent = name;
             document.getElementById('profile-display-username').textContent = '@' + username;
-            document.getElementById('profile-initial').textContent = name.charAt(0).toUpperCase();
+            const initialEl = document.getElementById('profile-initial');
+            if (initialEl) initialEl.textContent = name.charAt(0).toUpperCase();
             
             alert("Profile saved successfully!");
             toggleEditMode(false);
-            
-            return updatedLocal;
-        } catch (e) {
-            alert("Error saving profile: " + e.message);
-        }
+        } catch (e) { alert("Error saving profile: " + e.message); }
     }
     
-    // Toggle edit mode
     function toggleEditMode(enable) {
-        const fields = document.querySelectorAll('.editable-field');
-        const buttonGroup = document.querySelector('.button-group');
-        const editBtn = document.querySelector('.edit-btn');
-        const profilePicture = document.getElementById('profile-picture');
-        
-        fields.forEach(field => {
+        document.querySelectorAll('.editable-field').forEach(field => {
             field.disabled = !enable;
-            if (enable && field.id === 'name-input') {
-                field.select();
-            }
+            if (enable && field.id === 'name-input') field.select();
         });
+        const actions = document.querySelector('.profile-picture-actions');
+        if (actions) actions.style.display = enable ? 'block' : 'none';
         
-        const actions = profilePicture.querySelector('.profile-picture-actions');
-        if (actions) {
-            actions.style.display = enable ? 'block' : 'none';
-        }
-        
-        buttonGroup.style.display = enable ? 'flex' : 'none';
-        editBtn.style.display = enable ? 'none' : 'block';
+        document.querySelector('.button-group').style.display = enable ? 'flex' : 'none';
+        document.querySelector('.edit-btn').style.display = enable ? 'none' : 'block';
     }
     
-    // Remove profile picture (Made global)
     window.removeProfilePicture = function(event) {
         event.stopPropagation();
-        const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
-        delete profile.picture;
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-        
-        loadProfile(); // Re-load to reset the display
+        currentProfilePicture = null;
+        updateProfilePictureUI(null, document.getElementById('name-input').value);
     }
 
-    // Handle Picture Upload (Made global)
     window.handlePictureUpload = function(event) {
         const file = event.target.files[0];
         if (!file) return;
-        
-        if (file.size > 2 * 1024 * 1024) {
-            alert("Image size should be less than 2MB");
-            return;
-        }
-        
-        if (!file.type.startsWith('image/')) {
-            alert("Please upload an image file");
-            return;
-        }
+        if (file.size > 2 * 1024 * 1024) { alert("Image size should be less than 2MB"); return; }
+        if (!file.type.startsWith('image/')) { alert("Please upload an image file"); return; }
         
         const reader = new FileReader();
         reader.onload = (e) => {
-            const currentLocal = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
-            const updatedLocal = { ...currentLocal, picture: e.target.result };
-            localStorage.setItem(PROFILE_KEY, JSON.stringify(updatedLocal));
-            
-            loadProfile(); // Re-load to update display with new picture
+            currentProfilePicture = e.target.result;
+            updateProfilePictureUI(currentProfilePicture, document.getElementById('name-input').value);
         };
         reader.readAsDataURL(file);
     }
     
-    // Theme Logic Helpers (Simplified for reliance on theme.js)
-    function loadTheme() {
-        return localStorage.getItem(THEME_KEY) || "light";
-    }
-
-    window.changeTheme = function(themeName) {
-        // This relies on the theme.js script loaded in the <head>
-        localStorage.setItem(THEME_KEY, themeName);
-        document.documentElement.setAttribute('data-theme', themeName);
-    }
-    
-    // Initialize the page 
     document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            await loadProfile();
-        } catch (e) {
-            // Errors handled in loadProfile/fetchProfileApi
-        }
+        await loadProfile();
         
-        // Attach listeners for Edit/Cancel/Save
-        document.querySelector('.edit-btn').addEventListener('click', function() {
-            toggleEditMode(true);
-        });
-        
-        document.getElementById('cancel-edit').addEventListener('click', async function() {
-            await loadProfile(); // Reload saved data from API
-            toggleEditMode(false);
-        });
-        
+        document.querySelector('.edit-btn').addEventListener('click', () => toggleEditMode(true));
+        document.getElementById('cancel-edit').addEventListener('click', async () => { await loadProfile(); toggleEditMode(false); });
         document.getElementById('save-changes').addEventListener('click', saveProfile);
-        
-        // Allow saving with Enter key
         document.querySelectorAll('.editable-field').forEach(field => {
             field.addEventListener('keypress', async function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    await saveProfile();
-                }
+                if (e.key === 'Enter') { e.preventDefault(); await saveProfile(); }
             });
         });
-
-        // Theme initialization
-        const currentTheme = loadTheme();
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.checked = currentTheme === 'dark';
-        }
     });
-
 </script>
 </body>
 </html>

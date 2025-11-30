@@ -3,71 +3,98 @@
 // ===========================================
 //  1. CONFIGURATION
 // ===========================================
-// CRITICAL: Ensure this path is correct for your XAMPP setup:// CORRECT (Relative path - works everywhere)
 const API_URL = "tasks.php";
-const TOKEN_KEY = "studymate_auth_token"; // Key for storing the auth token
+const AUTH_URL = "auth.php"; // Needed for theme saving
+const TOKEN_KEY = "studymate_auth_token"; 
 
 // ===========================================
 //  2. AUTHENTICATION & API DATA FETCH
 // ===========================================
 
-// Global logout function (used if token is invalid)
 function logout() {
     localStorage.removeItem(TOKEN_KEY); 
-    // CRITICAL: Redirect to the login page
     window.location.href = 'login.html'; 
 }
 
 async function fetchTasks() {
     const token = localStorage.getItem(TOKEN_KEY); 
-    
-    // Safety check: If no token, API calls will fail, force logout
-    if (!token) {
-        logout(); 
-        return []; 
-    } 
+    if (!token) { logout(); return []; } 
 
     try {
         const response = await fetch(API_URL, {
             method: 'GET',
-            headers: {
-                // PHP API must read this header for authentication
-                'Authorization': `Bearer ${token}`, 
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         });
         
-        // Handle 401 response (Unauthorized/Token Expired)
-        if (response.status === 401) {
-             logout();
-             return [];
-        }
+        if (response.status === 401) { logout(); return []; }
         if (!response.ok) throw new Error(`API fetch failed with status: ${response.status}`);
         
-        // The API returns DB rows. We map them to match the frontend's expected format.
         const tasks = await response.json();
         return tasks.map(t => ({
             ...t,
             id: String(t.id),
             completed: t.status === 'Completed',
-            // Backend uses 'description' for subject
             subject: t.description || t.subject || '',
             title: t.title || '',
             due_date: t.due_date || null,
             priority: t.priority || 'medium'
-            
         }));
 
     } catch (e) {
         console.error("Failed to load tasks from API", e);
-        // If the error is a SyntaxError (JSON crash), it means PHP outputted HTML error.
-        alert("CRITICAL: Failed to connect to API or server error. Check console for PHP error.");
         return [];
     }
 }
 
 // ===========================================
-//  3. UTILITIES (Modified for robust date handling)
+//  3. THEME SYNC LOGIC (NEW)
+// ===========================================
+
+// 1. Load theme from DB on page load
+async function syncThemeFromApi() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    // Only sync if logged in and not on login page
+    if (!token || document.body.getAttribute('data-page') === 'login') return;
+
+    try {
+        const response = await fetch(`${AUTH_URL}?action=profile`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const profile = await response.json();
+            if (profile.theme_preference) {
+                // applyTheme comes from theme.js
+                if (window.applyTheme) {
+                    window.applyTheme(profile.theme_preference, true);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Theme sync failed:", e);
+    }
+}
+
+// 2. Save theme to DB when toggled
+async function saveThemeToApi(newTheme) {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+
+    try {
+        await fetch(`${AUTH_URL}?action=profile`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ theme_preference: newTheme })
+        });
+        console.log("Theme saved to DB:", newTheme);
+    } catch (e) {
+        console.error("Failed to save theme to DB", e);
+    }
+}
+
+// ===========================================
+//  4. UTILITIES
 // ===========================================
 
 function getSafeDate(d) {
@@ -81,14 +108,12 @@ function getSafeDate(d) {
     return null;
 }
 
-function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
-}
 function formatDate(d) {
     const date = getSafeDate(d);
     if (!date) return "Invalid Date";
     return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
+
 function isOverdue(d) {
     const due = getSafeDate(d);
     if (!due) return false;
@@ -98,35 +123,17 @@ function isOverdue(d) {
     return due < today;
 }
 
-function daysLeftText(d) {
-    const due = getSafeDate(d);
-    if (!due) return "Invalid Date";
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); 
-    due.setHours(0, 0, 0, 0); 
-
-    const diffMs = due.getTime() - today.getTime();
-    const diff = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diff < 0) return `${Math.abs(diff)} day(s) overdue`;
-    if (diff === 0) return `Due today`;
-    if (diff === 1) return `1 day left`;
-    return `${diff} days left`;
-}
-
 // ===========================================
-//  4. RENDERING FUNCTIONS (Made ASYNC)
+//  5. RENDERING FUNCTIONS
 // ===========================================
 
 async function renderDashboard(filterSubject = "all") {
-    const tasks = await fetchTasks(); // <<< API CALL
+    const tasks = await fetchTasks();
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
     const pending = total - completed;
     const overdue = tasks.filter(t => !t.completed && isOverdue(t.due_date)).length;
 
-    // stats
     const elTotal = document.querySelector("#total-tasks");
     const elCompleted = document.querySelector("#completed-tasks");
     const elPending = document.querySelector("#pending-tasks");
@@ -136,7 +143,6 @@ async function renderDashboard(filterSubject = "all") {
     if (elPending) elPending.textContent = pending;
     if (elOverdue) elOverdue.textContent = overdue;
 
-    // subject dropdown
     const subjectSet = new Set(tasks.map(t => t.subject).filter(s => s && s.trim().length));
     const subjectSelect = document.querySelector("#subject-filter");
     if (subjectSelect) {
@@ -151,7 +157,6 @@ async function renderDashboard(filterSubject = "all") {
         subjectSelect.value = current;
     }
 
-    // task list
     const list = document.querySelector("#task-list");
     if (!list) return;
     const filtered = filterSubject === "all" ? tasks : tasks.filter(t => t.subject === filterSubject);
@@ -160,7 +165,6 @@ async function renderDashboard(filterSubject = "all") {
         return;
     }
 
-    // sort: incomplete -> complete, then by due date
     filtered.sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return new Date(a.due_date) - new Date(b.due_date);
@@ -191,10 +195,8 @@ async function renderDashboard(filterSubject = "all") {
     }).join("");
 }
 
-
-
 async function renderSubjects() {
-    const tasks = await fetchTasks(); // <<< API CALL
+    const tasks = await fetchTasks();
     if (!document.querySelector("#subjects-list")) return;
     const subjects = {};
     tasks.forEach(t => {
@@ -226,25 +228,18 @@ async function renderSubjects() {
 }
 
 // ===========================================
-//  5. CRUD ACTIONS (API-Driven)
+//  6. CRUD ACTIONS
 // ===========================================
 
 async function sendApiRequest(url, method, body = null) {
     const token = localStorage.getItem(TOKEN_KEY);
     const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
-    
     const options = { method, headers };
-    if (body) {
-        options.body = JSON.stringify(body);
-    }
+    if (body) options.body = JSON.stringify(body);
     
     const response = await fetch(url, options);
-
-    if (response.status === 401) {
-        logout();
-        throw new Error("Unauthorized");
-    }
-    if (!response.ok && response.status !== 204) { // 204 is OK for DELETE
+    if (response.status === 401) { logout(); throw new Error("Unauthorized"); }
+    if (!response.ok && response.status !== 204) {
         const errorData = await response.json().catch(() => ({ error: response.statusText }));
         throw new Error(errorData.error || `API Request Failed with status ${response.status}`);
     }
@@ -276,7 +271,6 @@ async function toggleComplete(id) {
     await refreshAll();
 }
 
-/* Edit modal support: open with values */
 async function openEditModal(id) {
     const tasks = await fetchTasks();
     const t = tasks.find(x => x.id == id);
@@ -285,11 +279,10 @@ async function openEditModal(id) {
 }
 
 // ===========================================
-//  6. MODAL & REFRESH LOGIC (Made ASYNC)
+//  7. MODAL & REFRESH LOGIC
 // ===========================================
 
 function showModal(data = null) {
-    // data === null => create new; data._edit === true => edit existing
     const backdrop = document.createElement("div");
     backdrop.className = "modal-backdrop";
     backdrop.id = "modal-backdrop";
@@ -332,7 +325,6 @@ function showModal(data = null) {
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
 
-    // set minimum date to today
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("m-due").setAttribute("min", today);
 
@@ -370,16 +362,13 @@ function closeModal() {
     if (b) b.remove();
 }
 
-/* escape helper */
 function escapeHtml(txt) {
     if (!txt) return "";
     return String(txt).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function capitalize(s) { if (!s) return ""; return s.charAt(0).toUpperCase() + s.slice(1); }
 
-/* refresh render on all pages */
 async function refreshAll() {
-    // determine page by body id
     const bodyId = document.body.getAttribute("data-page");
     if (bodyId === "dashboard") {
         const filter = document.querySelector("#subject-filter") ? document.querySelector("#subject-filter").value : "all";
@@ -389,19 +378,16 @@ async function refreshAll() {
     } else if (bodyId === "subjects") {
         await renderSubjects();
     } else {
-        // default: update counts if present
         await renderDashboard("all");
     }
 }
 
-/* when DOM ready, attach any global listeners for dashboard */
 document.addEventListener("click", (e) => {
     if (e.target && e.target.matches && e.target.matches(".open-add")) {
         showModal(null);
     }
 });
 
-// app.js (snippet)
 const addBtn = document.querySelector('.open-add');
 const modalBackdrop = document.querySelector('.modal-backdrop');
 
@@ -425,16 +411,26 @@ if (modalBackdrop) {
 
 window.logout = logout; 
 
-// Run the initial Route Guard check after the DOM is ready
+// INITIALIZE APP
 document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem(TOKEN_KEY); 
-    // Check if the current body has a data-page attribute for login or register
     const isAuthPage = document.body.getAttribute('data-page') === 'login' || 
                        document.body.getAttribute('data-page') === 'register';
 
-    // If no token AND not on an authentication page, redirect.
     if (!token && !isAuthPage) {
-        // This calls the robust logout() function defined earlier, which handles the redirect.
         logout(); 
+    } else if (token && !isAuthPage) {
+        // 1. Sync Theme on Load
+        syncThemeFromApi();
+
+        // 2. Attach GLOBAL Listener for Theme Toggle (fixes issue where toggle didn't save)
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('change', (e) => {
+                const newTheme = e.target.checked ? 'dark' : 'light';
+                // theme.js handles the visual change, we handle the database save
+                saveThemeToApi(newTheme);
+            });
+        }
     }
 });
