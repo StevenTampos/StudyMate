@@ -125,21 +125,26 @@ switch ($method) {
              }
         }
         
-        $completed = $input['completed'] ?? null;
-
-        if (isset($completed)) {
-            // Toggle Status
-            $new_status = $completed ? 'Completed' : 'Pending';
-            $sql = "UPDATE tasks SET status = ? WHERE task_id = ? AND student_id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$new_status, $task_id, $student_id]);
-        } else {
-             // Full Edit
+        // FIX: Check for "Full Edit" fields FIRST. 
+        // If title is present, we assume it's a full update (even if 'completed' is also sent).
+        if (isset($input['title']) || isset($input['subject'])) {
+             // --- Full Edit Logic ---
              $title = $input['title'] ?? null;
              $subject = $input['subject'] ?? null;
              $due_date = $input['due_date'] ?? null;
              $priority = $input['priority'] ?? 'medium';
-             $new_status = $input['status'] ?? 'Pending'; 
+             
+             // Smart Status Handling:
+             // 1. Prefer 'status' string if sent
+             // 2. Else check 'completed' boolean
+             // 3. Default to 'Pending' only if neither exists
+             if (isset($input['status'])) {
+                 $new_status = $input['status'];
+             } elseif (isset($input['completed'])) {
+                 $new_status = $input['completed'] ? 'Completed' : 'Pending';
+             } else {
+                 $new_status = 'Pending';
+             }
 
              if (!$title || !$subject || !$due_date) {
                  http_response_code(400);
@@ -147,13 +152,38 @@ switch ($method) {
                  break;
              }
 
-             $sql = "UPDATE tasks SET title = ?, description = ?, due_date = ?, status = ?, priority = ? WHERE task_id = ? AND student_id = ?";
-             $stmt = $pdo->prepare($sql);
-             $stmt->execute([$title, $subject, $due_date, $new_status, $priority, $task_id, $student_id]);
-        }
+             try {
+                 $sql = "UPDATE tasks SET title = ?, description = ?, due_date = ?, status = ?, priority = ? WHERE task_id = ? AND student_id = ?";
+                 $stmt = $pdo->prepare($sql);
+                 $stmt->execute([$title, $subject, $due_date, $new_status, $priority, $task_id, $student_id]);
+                 
+                 http_response_code(200);
+                 echo json_encode(["message" => "Task updated fully"]);
+             } catch (\PDOException $e) {
+                 http_response_code(500);
+                 echo json_encode(["error" => "Database error in PUT (Full): " . $e->getMessage()]);
+             }
 
-        http_response_code(200);
-        echo json_encode(["message" => "Task updated"]);
+        } elseif (isset($input['completed'])) {
+            // --- Toggle Status Logic (Partial Update) ---
+            // Only runs if 'title' was NOT provided
+            $new_status = $input['completed'] ? 'Completed' : 'Pending';
+            
+            try {
+                $sql = "UPDATE tasks SET status = ? WHERE task_id = ? AND student_id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$new_status, $task_id, $student_id]);
+                
+                http_response_code(200);
+                echo json_encode(["message" => "Task status toggled"]);
+            } catch (\PDOException $e) {
+                 http_response_code(500);
+                 echo json_encode(["error" => "Database error in PUT (Toggle): " . $e->getMessage()]);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(["error" => "No valid fields provided for update"]);
+        }
         break;
         
     case 'DELETE':
@@ -161,10 +191,15 @@ switch ($method) {
              http_response_code(400); echo json_encode(["error" => "Missing task ID for delete"]); break;
         }
 
-        $stmt = $pdo->prepare("DELETE FROM tasks WHERE task_id = ? AND student_id = ?");
-        $stmt->execute([$task_id, $student_id]);
-        
-        http_response_code(204); 
+        try {
+            $stmt = $pdo->prepare("DELETE FROM tasks WHERE task_id = ? AND student_id = ?");
+            $stmt->execute([$task_id, $student_id]);
+            
+            http_response_code(204); 
+        } catch (\PDOException $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Database error in DELETE: " . $e->getMessage()]);
+        }
         break;
 
     default:
