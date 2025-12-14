@@ -488,9 +488,9 @@ select {
     margin-bottom: 40px;
 }
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px
 }
 .form-group label {
         font-weight: 600;
