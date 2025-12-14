@@ -217,7 +217,7 @@ async function renderSubjects() {
         const stat = subjects[s];
         const pct = Math.round((stat.done / stat.total) * 100);
         return `
-      <div class="card" style="margin-bottom:12px;display:flex;flex-direction:column;gap:10px">
+      <div class="stat-card" style="margin-bottom:12px;display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div style="font-weight:700">${escapeHtml(s)}</div>
           <div style="color:var(--muted)">${stat.done}/${stat.total} completed</div>
