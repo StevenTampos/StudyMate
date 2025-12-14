@@ -1,5 +1,5 @@
 // theme.js - StudyMate Theme Management
-//
+// This file should be included in all HTML pages
 
 (function() {
     'use strict';
@@ -68,8 +68,7 @@
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
             themeToggle.checked = (theme === 'dark');
-            const themeLabel = document.getElementById('themeLabel');
-            if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'Dark' : 'Light';
+            // FIX: Removed code that changed the "Light" text to "Dark"
         }
         
         // Save to LocalStorage (Instant recall for next reload)
