@@ -1,175 +1,75 @@
 <?php
-// tasks.php - Finalized PHP Task API
+// tasks.php - Refactored to OOP
+require_once 'classes.php';
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); 
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit(0);
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+$db = new Database();
+$pdo = $db->connect();
+
+// Middleware (Simplified)
+$headers = apache_request_headers();
+$token = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null);
+$studentId = null;
+if ($token) {
+    $data = json_decode(base64_decode(substr($token, 7)), true);
+    if ($data) $studentId = $data['studentId'];
 }
 
-include 'db_connect.php'; 
-
-// --- AUTHENTICATION LOGIC ---
-function getAuthorizationHeader(){
-    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-        return $_SERVER['HTTP_AUTHORIZATION'];
-    }
-    if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
-        return $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
-    }
-    if (function_exists('apache_request_headers')) {
-        $requestHeaders = apache_request_headers();
-        if (isset($requestHeaders['Authorization'])) {
-            return $requestHeaders['Authorization'];
-        }
-    }
-    return null;
-}
-
-$token = getAuthorizationHeader(); 
-$student_id = null;
-
-if ($token && strpos($token, 'Bearer ') === 0) {
-    $token_base64 = substr($token, 7); 
-    $token_payload = base64_decode($token_base64); 
-    $data = json_decode($token_payload, true);
-
-    if ($data && isset($data['studentId']) && is_numeric($data['studentId']) && isset($data['exp']) && $data['exp'] > time()) {
-        $student_id = $data['studentId'];
-    }
-}
-
-// --- SECURITY CHECK ---
-if (!$student_id) {
+if (!$studentId) {
     http_response_code(401);
-    die(json_encode(["error" => "Unauthorized: Please log in."]));
+    die(json_encode(["error" => "Unauthorized"]));
 }
-// -----------------------
+
+// Instantiate Task
+$taskObj = new Task($pdo, $studentId);
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
-
 $uri_parts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
-$task_id = end($uri_parts);
-if (!is_numeric($task_id)) {
-    $task_id = null;
-}
+$taskId = end($uri_parts);
+$taskId = is_numeric($taskId) ? $taskId : null;
 
-switch ($method) {
-    case 'GET':
-        try {
-            $sql = "SELECT task_id as id, title, description, due_date, status, priority FROM tasks WHERE student_id = ? ORDER BY status ASC, due_date ASC";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$student_id]);
-            $tasks = $stmt->fetchAll();
-
-            // Map 'description' back to 'subject' for frontend compatibility
-            $tasks = array_map(function($t) {
-                $t['subject'] = $t['description']; 
-                unset($t['description']);
-                return $t;
-            }, $tasks);
-            
-            echo json_encode($tasks);
-        } catch (\PDOException $e) {
-            http_response_code(500);
-            echo json_encode(["error" => "Database error in GET: " . $e->getMessage()]);
-        }
-        break;
-
-    case 'POST':
-        $title = $input['title'] ?? null;
-        $subject = $input['subject'] ?? null;
-        $due_date = $input['due_date'] ?? null;
-        $priority = $input['priority'] ?? 'medium';
-        
-        if (!$title || !$subject || !$due_date) {
-            http_response_code(400);
-            echo json_encode(["error" => "Missing required fields in POST data"]);
+try {
+    switch ($method) {
+        case 'GET':
+            echo json_encode($taskObj->getAllTasks());
             break;
-        }
 
-        try {
-            // Note: 'subject' is saved into the 'description' column
-            $sql = "INSERT INTO tasks (student_id, title, description, due_date, status, priority) VALUES (?, ?, ?, ?, 'Pending', ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                $student_id, 
-                $title,      
-                $subject, 
-                $due_date,   
-                $priority    
-            ]);
-            
+        case 'POST':
+            $newId = $taskObj->createTask($input['title'], $input['subject'], $input['due_date'], $input['priority'] ?? 'medium');
             http_response_code(201);
-            echo json_encode(["id" => $pdo->lastInsertId(), "message" => "Task created"]);
-        } catch (\PDOException $e) {
-            http_response_code(500);
-            echo json_encode(["error" => "Database error in POST: " . $e->getMessage()]);
-        }
-        break;
-        
-    case 'PUT':
-        if (!$task_id) {
-             $task_id = $input['id'] ?? null;
-             if (!$task_id) {
-                http_response_code(400); echo json_encode(["error" => "Missing task ID for update"]); break;
-             }
-        }
-        
-        $completed = $input['completed'] ?? null;
+            echo json_encode(["id" => $newId, "message" => "Task created"]);
+            break;
 
-        if (isset($completed)) {
-            // Toggle Status
-            $new_status = $completed ? 'Completed' : 'Pending';
-            $sql = "UPDATE tasks SET status = ? WHERE task_id = ? AND student_id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$new_status, $task_id, $student_id]);
-        } else {
-             // Full Edit
-             $title = $input['title'] ?? null;
-             $subject = $input['subject'] ?? null;
-             $due_date = $input['due_date'] ?? null;
-             $priority = $input['priority'] ?? 'medium';
-             $new_status = $input['status'] ?? 'Pending'; 
+        case 'PUT':
+            if (!$taskId) throw new Exception("Missing Task ID");
+            
+            if (isset($input['completed'])) {
+                // Toggle Status
+                $taskObj->toggleStatus($taskId, $input['completed']);
+                echo json_encode(["message" => "Status updated"]);
+            } else {
+                // Full Update
+                $status = isset($input['status']) ? $input['status'] : 'Pending';
+                $taskObj->update($taskId, $input['title'], $input['subject'], $input['due_date'], $status, $input['priority']);
+                echo json_encode(["message" => "Task fully updated"]);
+            }
+            break;
 
-             if (!$title || !$subject || !$due_date) {
-                 http_response_code(400);
-                 echo json_encode(["error" => "Missing required fields for full update"]);
-                 break;
-             }
-
-             $sql = "UPDATE tasks SET title = ?, description = ?, due_date = ?, status = ?, priority = ? WHERE task_id = ? AND student_id = ?";
-             $stmt = $pdo->prepare($sql);
-             $stmt->execute([$title, $subject, $due_date, $new_status, $priority, $task_id, $student_id]);
-        }
-
-        http_response_code(200);
-        echo json_encode(["message" => "Task updated"]);
-        break;
-        
-    case 'DELETE':
-        if (!$task_id) {
-             http_response_code(400); echo json_encode(["error" => "Missing task ID for delete"]); break;
-        }
-
-        $stmt = $pdo->prepare("DELETE FROM tasks WHERE task_id = ? AND student_id = ?");
-        $stmt->execute([$task_id, $student_id]);
-        
-        http_response_code(204); 
-        break;
-
-    default:
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        break;
+        case 'DELETE':
+            if (!$taskId) throw new Exception("Missing Task ID");
+            $taskObj->delete($taskId);
+            http_response_code(204);
+            break;
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(["error" => $e->getMessage()]);
 }
 ?>
