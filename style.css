@@ -1,5 +1,4 @@
 /* style.css - shared styles for StudyMate */
-/* */
 
 :root {
     /* Light theme (default) */
@@ -32,71 +31,44 @@
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
-/* Dark theme overrides */
+/* Dark theme overrides (FIXED for Visibility) */
 [data-theme="dark"] {
-    --bg: #121212;
-    --bg-color: #121212;
-    --text-color: #f5f5f5;
-    --card-bg: #1e1e1e;
-    --border-color: #333333;
-    --input-bg: #2d2d2d;
-    --input-border: #444444;
-    --input-text: #f5f5f5;
+    --primary: #63b3ed;
+    --primary-dark: #4299e1;
+    --bg: #0f172a;        /* Very dark blue-grey for main background */
+    --bg-color: #0f172a;
+    --bg-secondary: #1e293b; /* Slightly lighter for secondary areas */
+    --card-bg: #1e293b;   /* Distinct card color */
+    --text-color: #f8fafc;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --muted: #94a3b8;
+    --border-color: #334155; /* Visible borders */
+    --input-bg: #020617;  /* Dark inputs to stand out from cards */
+    --input-border: #475569;
+    --input-text: #f8fafc;
+    --glass: rgba(30, 41, 59, 0.9);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --header-bg: #1e293b;
+    --header-text: #f8fafc;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
     
-    /* Variables from second root block merged here */
-    --bg: #1a202c;
-    --bg-secondary: #2d3748;
-    --text-primary: #f7fafc;
-    --text-secondary: #cbd5e0;
-    --card-bg: #2d3748;
-    --muted: #a0aec0;
-    --glass: rgba(45, 55, 72, 0.9);
-    --header-grad: linear-gradient(90deg, #4a5bbf 0%, #5a3a7e 100%);
-    --shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-    --header-bg: #2d3748;
-    --header-text: #f7fafc;
-
-    /* FIX 1: Ensure input text is visible in Dark Mode */
+    /* Ensure input elements are visible */
     input[type="text"], 
     input[type="email"], 
     input[type="password"], 
     input[type="url"], 
     input[type="date"], 
+    input[type="time"],
+    input[type="number"],
     select, 
     textarea,
-    .input {
+    .input,
+    .select {
         color: var(--input-text);
         background-color: var(--input-bg);
         border-color: var(--input-border);
     }
-}
-
-/* FIX 1.1: Fix "Filter Button" (Select) visibility in dark mode */
-[data-theme="dark"] .select {
-    color: var(--input-text);
-    background-color: var(--input-bg);
-    border-color: var(--input-border);
-}
-
-/* FIX 1.2: Fix "Nav Buttons" visibility in dark mode */
-[data-theme="dark"] .nav-links a {
-    color: var(--text-secondary); /* Light grey instead of dark grey */
-}
-[data-theme="dark"] .nav-links a:hover {
-    color: var(--primary);
-}
-[data-theme="dark"] .nav-links a.active {
-    color: #fff;
-}
-
-/* FIX 1.3: Fix "Priority" text visibility in dark mode */
-[data-theme="dark"] .task-meta {
-    color: #cbd5e0; /* Brighter than the default muted color */
-}
-
-/* FIX 7: Disable transition for initial load (used by theme.js) */
-.no-transition, .no-transition * {
-    transition: none !important;
 }
 
 /* Base styles */
@@ -163,6 +135,11 @@ a:hover {
     font-weight: 600
 }
 
+/* Fix nav links in dark mode */
+[data-theme="dark"] .nav-links a {
+    color: var(--text-secondary);
+}
+
 .nav-links a.active {
     background: var(--primary);
     color: #fff
@@ -207,7 +184,7 @@ a:hover {
     padding: 18px;
     border-radius: 14px;
     box-shadow: var(--shadow);
-    border: 1px solid rgba(15, 23, 42, 0.03)
+    border: 1px solid var(--border-color); /* Use border variable */
 }
 
 .stat-number {
@@ -227,7 +204,7 @@ a:hover {
     padding: 18px;
     border-radius: 14px;
     box-shadow: var(--shadow);
-    border: 1px solid rgba(15, 23, 42, 0.03)
+    border: 1px solid var(--border-color); /* Use border variable */
 }
 
 .section-header {
@@ -271,13 +248,22 @@ a:hover {
     padding: 14px;
     border-radius: 12px;
     background: #f8fafc79;
-    border: 1px solid rgba(15, 23, 42, 0.03)
+    border: 1px solid var(--border-color); /* Use variable */
+}
+
+/* Fix task item background in dark mode */
+[data-theme="dark"] .task-item {
+    background: var(--bg);
 }
 
 .task-item.completed {
     background: #f0fff47c;
     border-color: rgba(72, 187, 120, 0.25);
     opacity: 0.9
+}
+
+[data-theme="dark"] .task-item.completed {
+    background: rgba(72, 187, 120, 0.1);
 }
 
 .task-left {
@@ -289,7 +275,7 @@ a:hover {
 .task-title {
     font-weight: 700;
     font-size: 1rem;
-    color: rgba(59, 59, 59, 0.85)
+    color: var(--text-primary);
 }
 
 .task-meta {
@@ -323,7 +309,8 @@ a:hover {
     padding: 8px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 1rem
+    font-size: 1rem;
+    color: var(--text-primary);
 }
 
 .complete-btn {
@@ -359,7 +346,9 @@ a:hover {
     max-width: 94%;
     background: var(--card-bg);
     padding: 18px;
-    border-radius: 12px
+    border-radius: 12px;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color); /* Add border for dark mode visibility */
 }
 
 .form-grid {
@@ -377,15 +366,17 @@ a:hover {
 
 .form-row label {
     font-size: 0.86rem;
-    color: #475569
+    color: var(--text-secondary);
 }
 
 .input,
 select {
     padding: 10px;
     border-radius: 8px;
-    border: 1px solid #e6eef6;
-    font-size: 0.98rem
+    border: 1px solid var(--border-color);
+    font-size: 0.98rem;
+    background: var(--input-bg);
+    color: var(--input-text);
 }
 
 .form-actions {
@@ -405,7 +396,7 @@ select {
 .select {
     padding: 8px;
     border-radius: 8px;
-    border: 1px solid #e6eef6
+    border: 1px solid var(--border-color);
 }
 
 /* deadlines page styles */
@@ -415,19 +406,19 @@ select {
     align-items: center;
     padding: 12px;
     border-radius: 10px;
-    background: #fff;
-    border: 1px solid rgba(15, 23, 42, 0.03)
+    background: var(--card-bg);
+    border: 1px solid var(--border-color); /* Use variable */
 }
 
 .deadline-item.overdue {
     border-left: 6px solid var(--danger);
-    background: #fff6f6
+    background: rgba(245, 101, 101, 0.1);
 }
 
 /* subjects progress */
 .progress {
     height: 10px;
-    background: #f2f6fb;
+    background: var(--bg-secondary); /* Use variable */
     border-radius: 999px;
     overflow: hidden
 }
@@ -457,7 +448,6 @@ select {
 
 /* === ANIMATION ADD-ONS FOR STUDYMATE === */
 
-/* 1️⃣ Smooth hover animations for buttons */
 .add-btn,
 .icon-btn {
     transition: all 0.25s ease;
@@ -470,7 +460,6 @@ select {
     filter: brightness(1.05);
 }
 
-/* 2️⃣ Card hover lift effect */
 .stat-card,
 .card {
     transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -482,7 +471,6 @@ select {
     box-shadow: 0 10px 25px rgba(17, 24, 39, 0.1);
 }
 
-/* 3️⃣ Task item subtle fade and slide-in */
 @keyframes fadeSlideIn {
     from {
         opacity: 0;
@@ -494,7 +482,6 @@ select {
     }
 }
 
-/* 4️⃣ Modal pop-up animation */
 @keyframes popupScale {
     from {
         opacity: 0;
@@ -515,7 +502,6 @@ select {
     transition: transform 0.2s ease;
 }
 
-/* 5️⃣ Navigation hover underline animation */
 .nav-links a {
     position: relative;
     transition: color 0.25s ease;
@@ -536,7 +522,6 @@ select {
     width: 100%;
 }
 
-/* 6️⃣ Smooth transitions when switching pages or elements */
 body {
     transition: background 0.4s ease, color 0.4s ease;
 }
@@ -591,4 +576,9 @@ body {
 
 .theme-toggle input:checked + .toggle-slider:before {
     transform: translateX(20px);
+}
+
+/* FIX 7: Disable transition for initial load (used by theme.js) */
+.no-transition, .no-transition * {
+    transition: none !important;
 }

@@ -4,7 +4,7 @@
 //  1. CONFIGURATION
 // ===========================================
 const API_URL = "tasks.php";
-const AUTH_URL = "auth.php"; // Needed for theme saving
+const AUTH_URL = "auth.php"; 
 const TOKEN_KEY = "studymate_auth_token"; 
 
 // ===========================================
@@ -34,7 +34,7 @@ async function fetchTasks() {
             ...t,
             id: String(t.id),
             completed: t.status === 'Completed',
-            subject: t.description || t.subject || '',
+            subject: t.description || t.subject || '', // Handle mapping from DB description
             title: t.title || '',
             due_date: t.due_date || null,
             priority: t.priority || 'medium'
@@ -47,13 +47,12 @@ async function fetchTasks() {
 }
 
 // ===========================================
-//  3. THEME SYNC LOGIC (NEW)
+//  3. THEME SYNC LOGIC
 // ===========================================
 
 // 1. Load theme from DB on page load
 async function syncThemeFromApi() {
     const token = localStorage.getItem(TOKEN_KEY);
-    // Only sync if logged in and not on login page
     if (!token || document.body.getAttribute('data-page') === 'login') return;
 
     try {
@@ -64,11 +63,8 @@ async function syncThemeFromApi() {
 
         if (response.ok) {
             const profile = await response.json();
-            if (profile.theme_preference) {
-                // applyTheme comes from theme.js
-                if (window.applyTheme) {
-                    window.applyTheme(profile.theme_preference, true);
-                }
+            if (profile.theme_preference && window.applyTheme) {
+                window.applyTheme(profile.theme_preference, true);
             }
         }
     } catch (e) {
@@ -101,7 +97,8 @@ function getSafeDate(d) {
     if (!d) return null;
     if (d instanceof Date && !isNaN(d.getTime())) return d;
     if (typeof d === 'string') {
-        const datePart = d.split('T')[0];
+        // Handle "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DD"
+        const datePart = d.split(' ')[0]; 
         const date = new Date(datePart + "T00:00:00");
         return isNaN(date.getTime()) ? null : date;
     }
@@ -173,6 +170,14 @@ async function renderDashboard(filterSubject = "all") {
     list.innerHTML = filtered.map(t => {
         const overdueClass = !t.completed && isOverdue(t.due_date) ? "overdue" : "";
         const completedClass = t.completed ? "completed" : "";
+        
+        // Extract time from due_date string (YYYY-MM-DD HH:MM:SS)
+        let timeDisplay = "";
+        if (t.due_date && t.due_date.includes(' ')) {
+            const timePart = t.due_date.split(' ')[1];
+            timeDisplay = " at " + timePart.substring(0, 5);
+        }
+
         return `
       <div class="task-item ${completedClass} ${overdueClass}" data-id="${t.id}">
         <div class="task-left">
@@ -181,7 +186,7 @@ async function renderDashboard(filterSubject = "all") {
             <div class="task-title">${escapeHtml(t.title)}</div>
             <div class="task-meta">
               <div class="task-subject">${escapeHtml(t.subject)}</div>
-              <div>Due: ${formatDate(t.due_date)} ${(!t.completed && isOverdue(t.due_date)) ? '<span style="color:var(--danger);font-weight:700;margin-left:6px">Overdue</span>' : ''}</div>
+              <div>Due: ${formatDate(t.due_date)}${timeDisplay} ${(!t.completed && isOverdue(t.due_date)) ? '<span style="color:var(--danger);font-weight:700;margin-left:6px">Overdue</span>' : ''}</div>
               <div style="padding-left:6px">${capitalize(t.priority || 'medium')} priority</div>
             </div>
           </div>
@@ -228,7 +233,7 @@ async function renderSubjects() {
 }
 
 // ===========================================
-//  6. CRUD ACTIONS
+//  6. CRUD ACTIONS (FIXED)
 // ===========================================
 
 async function sendApiRequest(url, method, body = null) {
@@ -253,13 +258,15 @@ async function addTask({ title, subject, due_date, priority }) {
 
 async function updateTask(updated) {
     const { id, ...data } = updated;
-    await sendApiRequest(`${API_URL}/${id}`, 'PUT', { ...data, subject: data.subject.trim() });
+    // FIX: Using ?id= parameter for safer URL handling
+    await sendApiRequest(`${API_URL}?id=${id}`, 'PUT', { ...data, subject: data.subject.trim() });
     await refreshAll();
 }
 
 async function deleteTask(id) {
     if (!confirm("Delete this task?")) return;
-    await sendApiRequest(`${API_URL}/${id}`, 'DELETE');
+    // FIX: Using ?id= parameter
+    await sendApiRequest(`${API_URL}?id=${id}`, 'DELETE');
     await refreshAll();
 }
 
@@ -267,7 +274,8 @@ async function toggleComplete(id) {
     const tasks = await fetchTasks();
     const task = tasks.find(t => t.id == id); 
     if (!task) return;
-    await sendApiRequest(`${API_URL}/${id}`, 'PUT', { completed: !task.completed }); 
+    // FIX: Using ?id= parameter
+    await sendApiRequest(`${API_URL}?id=${id}`, 'PUT', { completed: !task.completed }); 
     await refreshAll();
 }
 
@@ -279,13 +287,24 @@ async function openEditModal(id) {
 }
 
 // ===========================================
-//  7. MODAL & REFRESH LOGIC
+//  7. MODAL & REFRESH LOGIC (FIXED)
 // ===========================================
 
 function showModal(data = null) {
     const backdrop = document.createElement("div");
     backdrop.className = "modal-backdrop";
     backdrop.id = "modal-backdrop";
+
+    // Extract Date and Time from due_date string
+    let dateVal = "";
+    let timeVal = "23:59";
+    if (data && data.due_date) {
+        const parts = data.due_date.split(' ');
+        dateVal = parts[0];
+        if (parts.length > 1) {
+            timeVal = parts[1].substring(0, 5); // HH:MM
+        }
+    }
 
     const modal = document.createElement("div");
     modal.className = "modal";
@@ -305,7 +324,11 @@ function showModal(data = null) {
       </div>
       <div class="form-row">
         <label>Due Date</label>
-        <input class="input" type="date" id="m-due" value="${data ? data.due_date : ''}">
+        <input class="input" type="date" id="m-due" value="${dateVal}">
+      </div>
+      <div class="form-row">
+        <label>Due Time</label>
+        <input class="input" type="time" id="m-time" value="${timeVal}">
       </div>
       <div class="form-row">
         <label>Priority</label>
@@ -335,6 +358,7 @@ function showModal(data = null) {
         const title = document.getElementById("m-title").value.trim();
         const subject = document.getElementById("m-subject").value.trim();
         const due = document.getElementById("m-due").value;
+        const time = document.getElementById("m-time").value || "23:59";
         const priority = document.getElementById("m-priority").value;
 
         if (!title || !subject || !due) {
@@ -342,13 +366,16 @@ function showModal(data = null) {
             return;
         }
 
+        // Combine date and time
+        const fullDateTime = `${due} ${time}:00`;
+
         try {
             if (data && data._edit) {
-                const updated = { ...data, title, subject, due_date: due, priority };
+                const updated = { ...data, title, subject, due_date: fullDateTime, priority };
                 delete updated._edit;
                 await updateTask(updated);
             } else {
-                await addTask({ title, subject, due_date: due, priority });
+                await addTask({ title, subject, due_date: fullDateTime, priority });
             }
             closeModal();
         } catch (e) {
@@ -420,15 +447,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!token && !isAuthPage) {
         logout(); 
     } else if (token && !isAuthPage) {
-        // 1. Sync Theme on Load
         syncThemeFromApi();
-
-        // 2. Attach GLOBAL Listener for Theme Toggle (fixes issue where toggle didn't save)
+        
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
             themeToggle.addEventListener('change', (e) => {
                 const newTheme = e.target.checked ? 'dark' : 'light';
-                // theme.js handles the visual change, we handle the database save
                 saveThemeToApi(newTheme);
             });
         }

@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit(0);
 $db = new Database();
 $pdo = $db->connect();
 
-// Middleware (Simplified)
+// Middleware
 $headers = apache_request_headers();
 $token = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : null);
 $studentId = null;
@@ -26,14 +26,19 @@ if (!$studentId) {
     die(json_encode(["error" => "Unauthorized"]));
 }
 
-// Instantiate Task
 $taskObj = new Task($pdo, $studentId);
-
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
-$uri_parts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
-$taskId = end($uri_parts);
-$taskId = is_numeric($taskId) ? $taskId : null;
+
+// FIX: Robust ID Extraction (Supports ?id=1 OR /tasks.php/1)
+$taskId = $_GET['id'] ?? null;
+if (!$taskId) {
+    $uri_parts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+    $lastPart = end($uri_parts);
+    if (is_numeric($lastPart)) {
+        $taskId = $lastPart;
+    }
+}
 
 try {
     switch ($method) {
@@ -51,11 +56,9 @@ try {
             if (!$taskId) throw new Exception("Missing Task ID");
             
             if (isset($input['completed'])) {
-                // Toggle Status
                 $taskObj->toggleStatus($taskId, $input['completed']);
                 echo json_encode(["message" => "Status updated"]);
             } else {
-                // Full Update
                 $status = isset($input['status']) ? $input['status'] : 'Pending';
                 $taskObj->update($taskId, $input['title'], $input['subject'], $input['due_date'], $status, $input['priority']);
                 echo json_encode(["message" => "Task fully updated"]);
