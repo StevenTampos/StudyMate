@@ -56,7 +56,8 @@
             overflow: hidden;
         }
         
-        .profile-picture:hover .profile-picture-actions {
+        /* FIX 1A: Only show actions when hovering AND in editing mode */
+        .profile-picture-wrapper.editing .profile-picture:hover .profile-picture-actions {
             display: block !important;
         }
         
@@ -295,7 +296,6 @@
         
         .slider:before {
             position: absolute;
-            /* FIX 3: Add sun icon for light mode */
             content: "☀️"; 
             height: 22px;
             width: 22px;
@@ -319,7 +319,6 @@
         }
         
         input:checked + .slider:before {
-            /* FIX 3: Add moon icon for dark mode */
             content: "🌙"; 
             transform: translateX(30px);
         }
@@ -397,7 +396,7 @@
             
             <div class="button-group" style="display: none; margin-top: 20px; gap: 10px; justify-content: flex-end;">
                 <button type="button" class="secondary-btn" id="cancel-edit" onclick="toggleEditMode(false)">Cancel</button>
-                <button type="button" class="primary-btn" id="save-changes" onclick="saveProfile()">Save Changes</button>
+                <button type="button" class="primary-btn" id="save-changes">Save Changes</button>
             </div>
             
             <div class="profile-field" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
@@ -419,14 +418,11 @@
     
     <script src="app.js"></script>
 <script>
-    // Note: Theme persistence and loading is now handled globally in app.js
-    
     let currentProfilePicture = null;
 
     async function loadProfile() {
         let apiProfile = {};
         try {
-            // Using helper from app.js if available, or fetch directly
             if (window.sendApiRequest) {
                const token = localStorage.getItem("studymate_auth_token");
                const response = await fetch("auth.php?action=profile", {
@@ -459,6 +455,7 @@
 
     function updateProfilePictureUI(base64Image, name) {
         const profilePicture = document.getElementById('profile-picture');
+        // Note: Default display is none. It will be shown on hover IF .editing class is present on wrapper
         const actionsHtml = `
             <div class="profile-picture-actions" style="display: none; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); padding: 8px 0; text-align: center; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;">
                 <label for="picture-upload" style="color: white; cursor: pointer; font-size: 12px; display: block;">Change</label>
@@ -506,8 +503,14 @@
             field.disabled = !enable;
             if (enable && field.id === 'name-input') field.select();
         });
-        const actions = document.querySelector('.profile-picture-actions');
-        if (actions) actions.style.display = enable ? 'block' : 'none';
+        
+        // FIX 1B: Toggle 'editing' class on wrapper to enable hover effects
+        const wrapper = document.querySelector('.profile-picture-wrapper');
+        if (enable) {
+            wrapper.classList.add('editing');
+        } else {
+            wrapper.classList.remove('editing');
+        }
         
         document.querySelector('.button-group').style.display = enable ? 'flex' : 'none';
         document.querySelector('.edit-btn').style.display = enable ? 'none' : 'block';
@@ -538,7 +541,10 @@
         
         document.querySelector('.edit-btn').addEventListener('click', () => toggleEditMode(true));
         document.getElementById('cancel-edit').addEventListener('click', async () => { await loadProfile(); toggleEditMode(false); });
+        
+        // Event listener added here (no duplicate onclick in HTML now)
         document.getElementById('save-changes').addEventListener('click', saveProfile);
+        
         document.querySelectorAll('.editable-field').forEach(field => {
             field.addEventListener('keypress', async function(e) {
                 if (e.key === 'Enter') { e.preventDefault(); await saveProfile(); }
