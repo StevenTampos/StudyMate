@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -17,16 +18,63 @@
             box-shadow: var(--shadow);
             text-align: center;
         }
-        .auth-container h1 { font-size: 2rem; margin-top: 0; color: var(--text-primary); }
-        .auth-container p { color: var(--muted); margin-bottom: 25px; }
-        .form-row { margin-bottom: 15px; text-align: left; }
-        .form-row label { display: block; font-weight: 600; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px; }
-        .form-row input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--input-text); }
-        .primary-btn { background: var(--primary); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: background 0.2s; }
-        .primary-btn:hover { background: var(--primary-dark); }
-        .login-link { margin-top: 15px; font-size: 0.9rem; }
+
+        .auth-container h1 {
+            font-size: 2rem;
+            margin-top: 0;
+            color: var(--text-primary);
+        }
+
+        .auth-container p {
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-row label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .form-row input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        .primary-btn {
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .primary-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .login-link {
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
+
 <body data-page="login">
     <div class="auth-container">
         <h1>Welcome Back</h1>
@@ -40,7 +88,7 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" required>
             </div>
-            
+
             <button type="submit" class="primary-btn">Log In</button>
             <p id="message-display" style="margin-top:15px; font-weight:600; min-height: 20px;"></p>
         </form>
@@ -51,14 +99,14 @@
 
     <script>
         const LOGIN_API_URL = "auth.php?action=login";
-        
+
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const messageEl = document.getElementById('message-display');
-            
+
             messageEl.textContent = 'Verifying...';
             messageEl.style.color = 'var(--text-secondary)';
 
@@ -74,10 +122,10 @@
                 if (response.ok) {
                     // Save token for app.js to use
                     localStorage.setItem('studymate_auth_token', data.token);
-                    
+
                     messageEl.textContent = 'Login successful!';
                     messageEl.style.color = 'var(--success)';
-                    
+
                     setTimeout(() => {
                         window.location.href = 'index.html'; // Redirect to Dashboard
                     }, 500);
@@ -93,4 +141,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -18,18 +19,75 @@
             box-shadow: var(--shadow);
             text-align: center;
         }
-        .auth-container h1 { font-size: 2rem; margin-top: 0; color: var(--text-primary); }
-        .auth-container p { color: var(--muted); margin-bottom: 25px; }
-        .form-row { margin-bottom: 15px; text-align: left; }
-        .form-row label { display: block; font-weight: 600; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px; }
-        .form-row input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--input-text); }
-        .primary-btn { background: var(--primary); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: background 0.2s; }
-        .primary-btn:hover { background: var(--primary-dark); }
-        .login-link { margin-top: 15px; font-size: 0.9rem; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .auth-container h1 {
+            font-size: 2rem;
+            margin-top: 0;
+            color: var(--text-primary);
+        }
+
+        .auth-container p {
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-row label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .form-row input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        .primary-btn {
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .primary-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .login-link {
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
+
 <body data-page="register">
     <div class="auth-container">
         <h1>Create Account</h1>
@@ -39,7 +97,7 @@
                 <label for="fullName">Full Name</label>
                 <input type="text" id="fullName" required>
             </div>
-            
+
             <div class="form-grid">
                 <div class="form-row">
                     <label for="username">Username</label>
@@ -50,7 +108,7 @@
                     <input type="email" id="email" required>
                 </div>
             </div>
-            
+
             <div class="form-row">
                 <label for="password">Password</label>
                 <input type="password" id="password" required>
@@ -59,7 +117,7 @@
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" id="confirmPassword" required>
             </div>
-            
+
             <button type="submit" class="primary-btn">Register</button>
             <p id="message-display" style="margin-top:15px; font-weight:600; min-height: 20px;"></p>
         </form>
@@ -67,21 +125,21 @@
             Already have an account? <a href="login.html">Log In</a>
         </div>
     </div>
-    
+
     <script>
         // Using relative path so it works even if you rename your project folder
         const REGISTER_API_URL = "auth.php?action=register";
-        
+
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const fullName = document.getElementById('fullName').value;
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const messageEl = document.getElementById('message-display');
-            messageEl.textContent = 'Processing...'; 
+            messageEl.textContent = 'Processing...';
             messageEl.style.color = 'var(--text-secondary)';
 
             if (password !== confirmPassword) {
@@ -103,11 +161,11 @@
                     messageEl.textContent = 'Success! Redirecting to login...';
                     messageEl.style.color = 'var(--success)';
                     document.getElementById('register-form').reset();
-                    
+
                     setTimeout(() => {
                         window.location.href = 'login.html';
                     }, 1500);
-                    
+
                 } else {
                     messageEl.textContent = data.error || 'Registration failed.';
                     messageEl.style.color = 'var(--danger)';
@@ -120,4 +178,5 @@
         });
     </script>
 </body>
+
 </html>

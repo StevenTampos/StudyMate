@@ -31,7 +31,7 @@
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
-/* Dark theme overrides (FIXED for Visibility) */
+/* Dark theme overrides */
 [data-theme="dark"] {
     /* Magic property to fix Date Picker icon color */
     color-scheme: dark; 
@@ -56,7 +56,7 @@
     --header-text: #f8fafc;
     --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
     
-    /* Ensure input elements are visible */
+    /* Ensure input elements are visible in dark mode */
     input, 
     select, 
     textarea,
