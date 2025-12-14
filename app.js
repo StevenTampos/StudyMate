@@ -34,7 +34,7 @@ async function fetchTasks() {
             ...t,
             id: String(t.id),
             completed: t.status === 'Completed',
-            subject: t.description || t.subject || '', // Handle mapping from DB description
+            subject: t.description || t.subject || '', 
             title: t.title || '',
             due_date: t.due_date || null,
             priority: t.priority || 'medium'
@@ -50,7 +50,6 @@ async function fetchTasks() {
 //  3. THEME SYNC LOGIC
 // ===========================================
 
-// 1. Load theme from DB on page load
 async function syncThemeFromApi() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token || document.body.getAttribute('data-page') === 'login') return;
@@ -72,7 +71,6 @@ async function syncThemeFromApi() {
     }
 }
 
-// 2. Save theme to DB when toggled
 async function saveThemeToApi(newTheme) {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return;
@@ -97,7 +95,6 @@ function getSafeDate(d) {
     if (!d) return null;
     if (d instanceof Date && !isNaN(d.getTime())) return d;
     if (typeof d === 'string') {
-        // Handle "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DD"
         const datePart = d.split(' ')[0]; 
         const date = new Date(datePart + "T00:00:00");
         return isNaN(date.getTime()) ? null : date;
@@ -171,7 +168,6 @@ async function renderDashboard(filterSubject = "all") {
         const overdueClass = !t.completed && isOverdue(t.due_date) ? "overdue" : "";
         const completedClass = t.completed ? "completed" : "";
         
-        // Extract time from due_date string (YYYY-MM-DD HH:MM:SS)
         let timeDisplay = "";
         if (t.due_date && t.due_date.includes(' ')) {
             const timePart = t.due_date.split(' ')[1];
@@ -233,7 +229,7 @@ async function renderSubjects() {
 }
 
 // ===========================================
-//  6. CRUD ACTIONS (FIXED)
+//  6. CRUD ACTIONS
 // ===========================================
 
 async function sendApiRequest(url, method, body = null) {
@@ -258,14 +254,12 @@ async function addTask({ title, subject, due_date, priority }) {
 
 async function updateTask(updated) {
     const { id, ...data } = updated;
-    // FIX: Using ?id= parameter for safer URL handling
     await sendApiRequest(`${API_URL}?id=${id}`, 'PUT', { ...data, subject: data.subject.trim() });
     await refreshAll();
 }
 
 async function deleteTask(id) {
     if (!confirm("Delete this task?")) return;
-    // FIX: Using ?id= parameter
     await sendApiRequest(`${API_URL}?id=${id}`, 'DELETE');
     await refreshAll();
 }
@@ -274,7 +268,6 @@ async function toggleComplete(id) {
     const tasks = await fetchTasks();
     const task = tasks.find(t => t.id == id); 
     if (!task) return;
-    // FIX: Using ?id= parameter
     await sendApiRequest(`${API_URL}?id=${id}`, 'PUT', { completed: !task.completed }); 
     await refreshAll();
 }
@@ -287,7 +280,7 @@ async function openEditModal(id) {
 }
 
 // ===========================================
-//  7. MODAL & REFRESH LOGIC (FIXED)
+//  7. MODAL & REFRESH LOGIC
 // ===========================================
 
 function showModal(data = null) {

@@ -33,6 +33,9 @@
 
 /* Dark theme overrides (FIXED for Visibility) */
 [data-theme="dark"] {
+    /* Magic property to fix Date Picker icon color */
+    color-scheme: dark; 
+
     --primary: #63b3ed;
     --primary-dark: #4299e1;
     --bg: #0f172a;        /* Very dark blue-grey for main background */
@@ -43,9 +46,9 @@
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --muted: #94a3b8;
-    --border-color: #334155; /* Visible borders */
+    --border-color: #475569; /* Brighter border for visibility */
     --input-bg: #020617;  /* Dark inputs to stand out from cards */
-    --input-border: #475569;
+    --input-border: #64748b; /* Lighter border for inputs */
     --input-text: #f8fafc;
     --glass: rgba(30, 41, 59, 0.9);
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
@@ -54,13 +57,7 @@
     --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
     
     /* Ensure input elements are visible */
-    input[type="text"], 
-    input[type="email"], 
-    input[type="password"], 
-    input[type="url"], 
-    input[type="date"], 
-    input[type="time"],
-    input[type="number"],
+    input, 
     select, 
     textarea,
     .input,
@@ -184,7 +181,7 @@ a:hover {
     padding: 18px;
     border-radius: 14px;
     box-shadow: var(--shadow);
-    border: 1px solid var(--border-color); /* Use border variable */
+    border: 1px solid var(--border-color); 
 }
 
 .stat-number {
@@ -204,7 +201,7 @@ a:hover {
     padding: 18px;
     border-radius: 14px;
     box-shadow: var(--shadow);
-    border: 1px solid var(--border-color); /* Use border variable */
+    border: 1px solid var(--border-color); 
 }
 
 .section-header {
@@ -248,7 +245,7 @@ a:hover {
     padding: 14px;
     border-radius: 12px;
     background: #f8fafc79;
-    border: 1px solid var(--border-color); /* Use variable */
+    border: 1px solid var(--border-color); 
 }
 
 /* Fix task item background in dark mode */
@@ -348,7 +345,7 @@ a:hover {
     padding: 18px;
     border-radius: 12px;
     color: var(--text-primary);
-    border: 1px solid var(--border-color); /* Add border for dark mode visibility */
+    border: 1px solid var(--border-color); 
 }
 
 .form-grid {
@@ -407,7 +404,7 @@ select {
     padding: 12px;
     border-radius: 10px;
     background: var(--card-bg);
-    border: 1px solid var(--border-color); /* Use variable */
+    border: 1px solid var(--border-color); 
 }
 
 .deadline-item.overdue {
@@ -415,10 +412,31 @@ select {
     background: rgba(245, 101, 101, 0.1);
 }
 
+/* Expense / Budget styles (FIXED for Dark Mode Visibility) */
+.expense-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    background: var(--card-bg);
+    margin-bottom: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.summary-item {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
 /* subjects progress */
 .progress {
     height: 10px;
-    background: var(--bg-secondary); /* Use variable */
+    background: var(--bg-secondary);
     border-radius: 999px;
     overflow: hidden
 }
